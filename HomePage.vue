@@ -4,7 +4,7 @@
       >Generate coding problems to test your skills and improve your coding abilities.</span
     >
     <div class="start-button-1">
-      <a class="get-started" href="#generate-tasks-block">Get started</a>
+      <a class="get-started" href="#generate-tasks-block" @click.prevent="navigateTo('/#generate-tasks-block')">Get started</a>
     </div>
 
     <!-- Generate task block -->
@@ -25,7 +25,7 @@
       </div>
       <div class="flex-row-fb">
         <a class="try-now-left-generate" href="#" @click.prevent="navigateTo('/generate-skips')">Try now →</a>
-        <a class="try-now-right-generate" href="#" @click.prevent="navigateTo('/generate-noices')">Try now →</a>
+        <a class="try-now-right-generate" href="#" @click.prevent="navigateTo('/generate-noises')">Try now →</a>
       </div>
     </div>
 
@@ -57,9 +57,34 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { nextTick } from 'vue'
 
 const router = useRouter()
-const navigateTo = (path) => {
-  router.push(path)
+const navigateTo = async (path) => {
+  const currentPath = window.location.pathname
+  if (currentPath !== path.split('#')[0] || path === '/') {
+    await router.push(path)
+    if (path.includes('#generate-tasks-block')) {
+      await nextTick()
+      setTimeout(() => {
+        const element = document.getElementById('generate-tasks-block')
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' })
+        } else {
+          console.warn('Element #generate-tasks-block not found')
+        }
+      }, 100) // Small delay to ensure DOM is ready
+    }
+  } else if (path.includes('#generate-tasks-block')) {
+    await nextTick()
+    setTimeout(() => {
+      const element = document.getElementById('generate-tasks-block')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      } else {
+        console.warn('Element #generate-tasks-block not found')
+      }
+    }, 100) // Small delay to ensure DOM is ready
+  }
 }
 </script>

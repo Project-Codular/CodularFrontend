@@ -13,9 +13,9 @@
       <div class="footer-nav">
         <span class="nav-title">Explore Codular</span>
         <div class="nav-links">
-          <a href="#" @click.prevent="navigateTo('/generate-gaps')">Generate gaps</a>
+          <a href="#" @click.prevent="navigateTo('/generate-skips')">Generate skips</a>
           <a href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
-          <a href="#" @click.prevent="navigateTo('/solve')">Solve problems</a>
+          <a href="#" @click.prevent="navigateTo('/#solve-tasks-block')">Solve problems</a>
         </div>
       </div>
 
@@ -120,11 +120,12 @@ const navigateTo = (path) => {
   font-weight: 400;
   color: #ffffff;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: font-size 0.2s ease;
 }
 
 .nav-links a:hover {
-  color: var(--primary-purple);
+  font-size: calc(16px + 0.2px);
+  color: #ffffff; /* Ensure text remains white */
 }
 
 @media (max-width: 768px) {
@@ -153,6 +154,10 @@ const navigateTo = (path) => {
 
   .nav-links a {
     font-size: 14px;
+  }
+
+  .nav-links a:hover {
+    font-size: calc(14px + 0.2px);
   }
 }
 </style>

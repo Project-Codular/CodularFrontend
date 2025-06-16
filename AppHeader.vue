@@ -5,7 +5,7 @@
       <div class="menu">
         <a class="contribute-problem" href="#" @click.prevent="navigateTo('/generate-skips')">Generate skips</a>
         <a class="solve-problems" href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
-        <a class="solve-problems" href="#generate-tasks-block">Solve problems</a>
+        <a class="solve-problems" href="#solve-tasks-block" @click.prevent="navigateTo('/#solve-tasks-block')">Solve problems</a>
       </div>
 
       <div class="log-in-start">
@@ -25,14 +25,36 @@
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './src/stores/auth' // Импорт Pinia store
 import UserProfile from './UserProfile.vue' // Импорт нового компонента профиля
+import { nextTick } from 'vue' // Импорт nextTick из vue
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore() // Инициализация store
 
-const navigateTo = (path) => {
+const navigateTo = async (path) => {
   if (route.path !== path || path === '/') {
-    router.push(path)
+    await router.push(path)
+    if (path === '/#solve-tasks-block') {
+      await nextTick()
+      setTimeout(() => {
+        const element = document.getElementById('solve-tasks-block')
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' })
+        } else {
+          console.warn('Element #solve-tasks-block not found')
+        }
+      }, 100) // Small delay to ensure DOM is ready
+    }
+  } else if (path === '/#solve-tasks-block') {
+    await nextTick()
+    setTimeout(() => {
+      const element = document.getElementById('solve-tasks-block')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' })
+      } else {
+        console.warn('Element #solve-tasks-block not found')
+      }
+    }, 100) // Small delay to ensure DOM is ready
   }
 }
 

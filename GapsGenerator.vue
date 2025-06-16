@@ -32,10 +32,6 @@
           <label class="editor-label">Source Code</label>
           <textarea ref="editorEl" class="code-mirror-textarea"></textarea>
         </div>
-        <div class="editor-container">
-          <label class="editor-label">Result</label>
-          <textarea ref="resultEditorEl" class="code-mirror-textarea"></textarea>
-        </div>
       </div>
 
       <p v-if="error" class="error-message">{{ error }}</p>
@@ -60,14 +56,12 @@ const taskStore = useTaskStore()
 const gapsNumber = ref(1)
 const selectedLanguage = ref('Python')
 const editorEl = ref(null)
-const resultEditorEl = ref(null)
 const error = ref('')
 const isLoading = ref(false)
 const isGenerating = ref(false)
 const isDarkTheme = ref(false)
 
 let editorInstance = null
-let resultEditorInstance = null
 
 const codeExamples = {
   Python: `def greet(name):\n    print(f"Hello, {name}!")\n`,
@@ -104,21 +98,6 @@ const initializeCodeMirror = () => {
       tabSize: 4,
     })
     editorInstance.setValue(codeExamples[selectedLanguage.value] || '')
-  }
-
-  if (resultEditorEl.value && window.CodeMirror) {
-    if (resultEditorInstance) {
-      resultEditorInstance.toTextArea();
-      resultEditorInstance = null;
-    }
-    resultEditorInstance = window.CodeMirror.fromTextArea(resultEditorEl.value, {
-      lineNumbers: true,
-      mode: getMode(selectedLanguage.value),
-      theme: isDarkTheme.value ? 'dracula' : 'default',
-      readOnly: true,
-      indentUnit: 4,
-      tabSize: 4,
-    })
   }
 };
 
@@ -171,9 +150,6 @@ watch(isDarkTheme, () => {
   if (editorInstance) {
     editorInstance.setOption('theme', isDarkTheme.value ? 'dracula' : 'default');
   }
-  if (resultEditorInstance) {
-    resultEditorInstance.setOption('theme', isDarkTheme.value ? 'dracula' : 'default');
-  }
 });
 
 watch(selectedLanguage, (newLang) => {
@@ -181,17 +157,11 @@ watch(selectedLanguage, (newLang) => {
     editorInstance.setOption('mode', getMode(newLang));
     editorInstance.setValue(codeExamples[newLang] || '');
   }
-  if (resultEditorInstance) {
-    resultEditorInstance.setOption('mode', getMode(newLang));
-  }
 });
 
 onBeforeUnmount(() => {
   if (editorInstance) {
     editorInstance.toTextArea();
-  }
-  if (resultEditorInstance) {
-    resultEditorInstance.toTextArea();
   }
 });
 
@@ -246,9 +216,8 @@ const generateGaps = async () => {
 
           if (statusResponse.status === 200 && statusData.status === 'Done') {
             clearInterval(checkInterval);
-            resultEditorInstance.setValue(JSON.stringify(statusData, null, 2));
             taskStore.setTaskAlias(taskAlias);
-            await navigateTo(`task/${taskAlias}`);
+            await navigateTo(taskAlias); // Pass only the taskAlias, not "task/{taskAlias}"
           } else if (statusData.status === 'Failed' || attempts >= maxAttempts) {
             clearInterval(checkInterval);
             error.value = statusData.message || 'Task processing failed or timed out';
@@ -269,25 +238,18 @@ const generateGaps = async () => {
       onBeforeUnmount(() => {
         clearInterval(checkInterval);
       });
-    } else if (resultEditorInstance) {
-      resultEditorInstance.setValue(JSON.stringify(result, null, 2));
-      isGenerating.value = false;
-      isLoading.value = false;
     }
   } catch (err) {
     console.error('Ошибка:', err);
     error.value = `Generation error: ${err.message}`;
-    if (resultEditorInstance) {
-      resultEditorInstance.setValue(`Error: ${err.message}`);
-    }
     isGenerating.value = false;
     isLoading.value = false;
   }
 };
 
 const navigateTo = (path) => {
-  if (route.path !== path || path === '/') {
-    router.push(path)
+  if (route.path !== `/task/${path}` || path === '/') {
+    router.push(`/task/${path}`)
   }
 };
 

@@ -220,7 +220,7 @@ button {
   width: 918px;
   height: 110px;
   margin: 17px 0 0 501px;
-  color: #0b00e1;
+  color: #0900b5;
   font-family: Helvetica, var(--default-font-family);
   font-size: 50px;
   font-weight: 400;
@@ -253,7 +253,7 @@ button {
   width: 210px;
   height: 65px;
   margin: 50px 0 0 855px;
-  background: #4f46e5;
+  background: #0900b5;
   z-index: 10;
   border-radius: 15px;
 }
@@ -263,7 +263,7 @@ button {
   height: 710px;
   margin: 140px 0 0 0;
   font-size: 0px;
-  background: #4f46e5;
+  background: #0900b5;
   z-index: 14;
   overflow: hidden;
 }
@@ -298,7 +298,7 @@ button {
   position: relative;
   height: 23px;
   margin: 62px 0 0 841px;
-  color: #0b00e1;
+  color: #0900b5;
   font-family: Friska, var(--default-font-family);
   font-size: 24px;
   font-weight: 400;
@@ -336,7 +336,7 @@ button {
   flex-shrink: 0;
   position: relative;
   height: 55px;
-  color: #0b00e1;
+  color: #0900b5;
   font-family: Friska, var(--default-font-family);
   font-size: 30px;
   font-weight: 400;
@@ -367,7 +367,7 @@ button {
   text-align: left;
   position: relative;
   height: 55px;
-  color: #0b00e1;
+  color: #0900b5;
   font-family: Friska, var(--default-font-family);
   font-size: 30px;
   font-weight: 400;
@@ -387,7 +387,7 @@ button {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  background: #4f46e5;
+  background: #0900b5;
   color: #ffffff;
   padding: 20px;
   box-sizing: border-box;
@@ -448,7 +448,7 @@ button {
   height: 55px;
   top: 0;
   left: 0;
-  color: #0b00e1;
+  color: #0900b5;
   font-family: Friska, var(--default-font-family);
   font-size: 25px;
   font-weight: 400;
@@ -485,7 +485,7 @@ button {
   height: 110px;
   top: 0;
   left: 964px;
-  color: #0b00e1;
+  color: #0900b5;
   font-family: Friska, var(--default-font-family);
   font-size: 25px;
   font-weight: 400;
@@ -548,7 +548,7 @@ button {
   position: relative;
   width: 574px;
   height: 83px;
-  color: #0b00e1;
+  color: #07008d;
   font-family: Friska, var(--default-font-family);
   font-size: 28px;
   font-weight: 400;
@@ -565,7 +565,7 @@ button {
   width: 574px;
   height: 83px;
   text-decoration: none;
-  color: #0b00e1;
+  color: #07008d;
   font-family: Friska, var(--default-font-family);
   font-size: 28px;
   font-weight: 400;
