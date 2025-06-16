@@ -3,8 +3,8 @@
     <div class="flex-row">
       <span class="code-genius" @click="navigateTo('/')">Codular</span>
       <div class="menu">
-        <a class="contribute-problem" href="#" @click.prevent="navigateTo('/fill-gaps')">Fill in the gaps</a>
-        <a class="solve-problems" href="#" @click.prevent="navigateTo('/remove-noices')">Remove noices</a>
+        <a class="contribute-problem" href="#" @click.prevent="navigateTo('/gaps-generator')">Generate gaps</a>
+        <a class="solve-problems" href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
         <a class="solve-problems" href="#" @click.prevent="navigateTo('/solve')">Solve problems</a>
       </div>
 

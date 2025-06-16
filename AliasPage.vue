@@ -5,12 +5,23 @@
       Error loading task: {{ error }}
     </div>
     <div v-else class="task-content">
+      <div class="controls-row">
+        <div class="control-group">
+          <label for="themeToggle" class="label-text">Theme: {{ isDarkTheme ? 'Dark' : 'Light' }}</label>
+          <label class="switch">
+            <input type="checkbox" id="themeToggle" v-model="isDarkTheme" />
+            <span class="slider" :class="{ 'dark-theme': isDarkTheme }"></span>
+          </label>
+        </div>
+      </div>
       <h2 class="task-description">{{ taskData.description }}</h2>
 
       <div class="code-and-inputs-container">
         <div class="code-section">
           <h3>Code to Solve:</h3>
-          <div ref="codeMirrorContainer" class="codemirror-wrapper"></div>
+          <div ref="codeMirrorContainer" class="codemirror-wrapper">
+            <textarea ref="codeMirrorTextarea"></textarea>
+          </div>
         </div>
 
         <div class="answers-section">
@@ -66,14 +77,6 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import api from './src/api/axios'
-import { basicSetup } from 'codemirror'
-import { EditorState } from '@codemirror/state'
-import { EditorView, keymap } from '@codemirror/view'
-import { oneDark } from '@codemirror/theme-one-dark'
-import { indentWithTab } from '@codemirror/commands'
-import { python } from '@codemirror/lang-python'
-import { java } from '@codemirror/lang-java'
-import { cpp } from '@codemirror/lang-cpp'
 
 const route = useRoute()
 const taskData = ref(null)
@@ -81,10 +84,12 @@ const loading = ref(true)
 const error = ref(null)
 const userAnswers = ref([])
 const codeMirrorContainer = ref(null)
+const codeMirrorTextarea = ref(null)
 const isSubmitting = ref(false)
 const submissionError = ref(null)
 const submissionResult = ref(null)
-let editorView = null
+const isDarkTheme = ref(false)
+let editorInstance = null
 
 const inputCount = computed(() => {
   if (taskData.value && taskData.value.codeToSolve) {
@@ -93,17 +98,51 @@ const inputCount = computed(() => {
   return 0
 })
 
-const getLanguageExtension = (lang) => {
-  switch (lang?.toLowerCase()) {
+const getMode = (language) => {
+  switch (language?.toLowerCase()) {
     case 'python':
-      return python()
+      return 'python'
     case 'java':
-      return java()
     case 'cpp':
-      return cpp()
+      return 'text/x-c++src'
     default:
-      return []
+      console.warn(`No mode for language ${language}`)
+      return 'text/plain'
   }
+}
+
+const loadCodeMirror = async () => {
+  if (window.CodeMirror) return
+  await Promise.all([
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js'),
+    loadLink('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css'),
+    loadLink('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css')
+  ])
+  await Promise.all([
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js'),
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js')
+  ])
+}
+
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = src
+    script.onload = resolve
+    script.onerror = reject
+    document.head.appendChild(script)
+  })
+}
+
+const loadLink = (href) => {
+  return new Promise((resolve, reject) => {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = href
+    link.onload = resolve
+    link.onerror = reject
+    document.head.appendChild(link)
+  })
 }
 
 const fetchTask = async (alias) => {
@@ -112,10 +151,10 @@ const fetchTask = async (alias) => {
   error.value = null
   submissionError.value = null
   submissionResult.value = null
-  if (editorView) {
+  if (editorInstance) {
     console.log('fetchTask: Destroying existing CodeMirror instance.')
-    editorView.destroy()
-    editorView = null
+    editorInstance.toTextArea()
+    editorInstance = null
   }
 
   try {
@@ -132,42 +171,33 @@ const fetchTask = async (alias) => {
   }
 }
 
-const initializeCodeMirror = () => {
+const initializeCodeMirror = async () => {
   console.log('initializeCodeMirror: Attempting initialization.')
-  console.log('initializeCodeMirror: codeMirrorContainer.value:', codeMirrorContainer.value)
+  console.log('initializeCodeMirror: codeMirrorTextarea.value:', codeMirrorTextarea.value)
   console.log('initializeCodeMirror: taskData.value?.codeToSolve:', taskData.value?.codeToSolve)
 
-  if (codeMirrorContainer.value && taskData.value && taskData.value.codeToSolve) {
-    if (editorView && editorView.dom.parentNode === codeMirrorContainer.value) {
-      console.log('initializeCodeMirror: Destroying old editor in same container.')
-      editorView.destroy()
+  await loadCodeMirror()
+
+  if (codeMirrorTextarea.value && taskData.value && taskData.value.codeToSolve && window.CodeMirror) {
+    if (editorInstance) {
+      console.log('initializeCodeMirror: Destroying old editor.')
+      editorInstance.toTextArea()
+      editorInstance = null
     }
 
-    const startState = EditorState.create({
-      doc: taskData.value.codeToSolve,
-      extensions: [
-        basicSetup,
-        oneDark,
-        EditorView.lineWrapping,
-        EditorView.editable.of(taskData.value.canEdit || false),
-        keymap.of([indentWithTab]),
-        getLanguageExtension(taskData.value.programmingLang)
-      ],
+    editorInstance = window.CodeMirror.fromTextArea(codeMirrorTextarea.value, {
+      lineNumbers: true,
+      mode: getMode(taskData.value.programmingLang),
+      theme: isDarkTheme.value ? 'dracula' : 'default',
+      readOnly: true,
+      indentUnit: 4,
+      tabSize: 4,
+      lineWrapping: true
     })
-
-    editorView = new EditorView({
-      state: startState,
-      parent: codeMirrorContainer.value,
-    })
+    editorInstance.setValue(taskData.value.codeToSolve)
     console.log('initializeCodeMirror: CodeMirror initialized successfully!')
-  } else if (codeMirrorContainer.value && !taskData.value?.codeToSolve) {
-    console.log('initializeCodeMirror: No codeToSolve found, ensuring editor is destroyed.')
-    if (editorView) {
-      editorView.destroy()
-      editorView = null
-    }
   } else {
-    console.log('initializeCodeMirror: Conditions not met for initialization (container or data missing).')
+    console.log('initializeCodeMirror: Conditions not met for initialization.')
   }
 }
 
@@ -191,7 +221,7 @@ const submitAnswers = async () => {
     } else if (taskType === 'noises') {
       endpoint = '/noises/solve'
       payload = {
-        answer: 'placeholder_answer', // Placeholder as instructed
+        answer: 'placeholder_answer',
         taskAlias
       }
     } else {
@@ -199,7 +229,7 @@ const submitAnswers = async () => {
     }
 
     console.log('submitAnswers: Sending request to', endpoint, 'with payload:', payload)
-    const response = await api.post(`${endpoint}`, payload)
+    const response = await api.post(endpoint, payload)
     console.log('submitAnswers: Response received:', response.data)
 
     const { submissionId } = response.data
@@ -207,7 +237,6 @@ const submitAnswers = async () => {
       throw new Error('No submission ID received')
     }
 
-    // Start polling submission status
     let attempts = 0
     const maxAttempts = 30
     const checkInterval = setInterval(async () => {
@@ -219,7 +248,6 @@ const submitAnswers = async () => {
         console.log('Polling response:', statusData)
 
         if (statusData.isCorrect === 'Pending') {
-          // Continue polling
           if (attempts >= maxAttempts) {
             clearInterval(checkInterval)
             submissionError.value = 'Submission check timed out'
@@ -264,10 +292,11 @@ const submitAnswers = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   console.log('onMounted: Component mounted.')
   if (route.params.id) {
-    fetchTask(route.params.id)
+    await fetchTask(route.params.id)
+    await initializeCodeMirror()
   }
 })
 
@@ -286,12 +315,20 @@ watch(() => route.params.id, (newId) => {
     fetchTask(newId)
   }
 })
+
+watch(isDarkTheme, () => {
+  if (editorInstance) {
+    editorInstance.setOption('theme', isDarkTheme.value ? 'dracula' : 'default')
+  }
+})
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap');
+
 :root {
   --default-font-family: Friska, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, Ubuntu, 'Helvetica Neue', Helvetica, Helvetica, Arial,
+    Roboto, Ubuntu, 'Helvetica Neue', Helvetica, Arial,
     'PingFang SC', 'Hiragino Sans GB', 'Microsoft Yahei UI', 'Microsoft Yahei',
     'Source Han Sans CN', sans-serif;
   --primary-purple: #4f46e5;
@@ -307,7 +344,106 @@ watch(() => route.params.id, (newId) => {
   font-family: var(--default-font-family);
 }
 
-.loading-message,
+.controls-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.label-text {
+  font-family: Friska, var(--default-font-family);
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  width: 120px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 80px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.slider:after {
+  position: absolute;
+  content: "☀️";
+  font-size: 20px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #000;
+  line-height: 34px;
+}
+
+.slider.dark-theme:after {
+  content: "🌙";
+  left: 10px;
+  right: auto;
+  color: #fff;
+  line-height: 34px;
+}
+
+input:checked + .slider {
+  background-color: #4f46e5;
+}
+
+input:checked + .slider:before {
+  transform: translateX(46px);
+}
+
+.loading-message {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: #6f6a6a;
+  margin-top: 50px;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { color: #6f6a6a; }
+  50% { color: #b0b0b0; }
+}
+
 .error-message,
 .no-inputs-message {
   text-align: center;
@@ -357,30 +493,20 @@ watch(() => route.params.id, (newId) => {
   overflow: hidden;
 }
 
-.codemirror-wrapper :deep(.cm-editor) {
+.codemirror-wrapper :deep(.CodeMirror) {
   font-size: 1.4em !important;
   height: 400px;
   border-radius: 8px;
+  font-family: 'Roboto Mono', monospace;
 }
 
-.cm-editor.cm-scroller {
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
+.CodeMirror-scroll {
+  max-height: 400px;
+  border-radius: 8px;
+}
 
-  &::-webkit-scrollbar-thumb {
-    background-color: #888;
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background-color: #555;
-  }
-
-  &::-webkit-scrollbar-track {
-    background-color: #f1f1f1;
-  }
+.CodeMirror {
+  height: 400px;
 }
 
 .inputs-grid {
@@ -496,5 +622,39 @@ watch(() => route.params.id, (newId) => {
   font-size: 1em;
   color: var(--text-gray);
   margin-bottom: 5px;
+}
+
+@media (max-width: 768px) {
+  .code-and-inputs-container {
+    flex-direction: column;
+  }
+
+  .controls-row {
+    justify-content: center;
+  }
+
+  .switch {
+    width: 60px;
+  }
+
+  .slider:after {
+    font-size: 16px;
+  }
+
+  .slider.dark-theme:after {
+    font-size: 16px;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(26px);
+  }
+
+  .label-text {
+    width: 100px;
+  }
+
+  .loading-message {
+    font-size: 24px;
+  }
 }
 </style>

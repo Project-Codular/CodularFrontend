@@ -4,7 +4,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../../HomePage.vue'
 import Test from '../../test.vue'
 import LoginForm from '../../LoginForm.vue'
-import FillGapsGenerator from '../../FillGapsGenerator.vue' // Импортируем новый компонент
+import FillGapsGenerator from '../../GapsGenerator.vue'
+import NoisesGenerator from '../../NoisesGenerator.vue'
 import { useAuthStore } from '../stores/auth'
 import AliasPage from "../../AliasPage.vue";
 
@@ -12,7 +13,8 @@ const routes = [
   { path: '/', component: HomePage },
   { path: '/login', component: LoginForm },
   { path: '/start', component: HomePage },
-  { path: '/fill-gaps', component: FillGapsGenerator, meta: { requiresAuth: true } }, 
+  { path: '/generate-gaps', component: FillGapsGenerator, meta: { requiresAuth: true } }, 
+  { path: '/generate-noises', component: NoisesGenerator, meta: { requiresAuth: true } }, 
   { path: '/remove-noices', component: Test, meta: { requiresAuth: true } }, 
   { path: '/solve', component: Test, meta: { requiresAuth: true } },
   { path: '/task/:id', component: AliasPage, meta: { requiresAuth: true } },
