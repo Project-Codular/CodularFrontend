@@ -1,8 +1,8 @@
 <template>
   <div class="task-page-wrapper">
     <div v-if="loading" class="loading-message">Loading task...</div>
-    <div v-else-if="error" class="error-message">
-      Error loading task: {{ error }}
+    <div v-else-if="taskData.error" class="error-message">
+      Error loading task: {{ taskData.error }}
     </div>
     <div v-else class="task-content">
       <div class="controls-row">
@@ -25,27 +25,49 @@
         </div>
 
         <div class="answers-section">
-          <h3>Your Answers:</h3>
-          <div v-if="inputCount === 0" class="no-inputs-message">
-            No gaps to fill in this problem.
-          </div>
-          <div v-else class="inputs-grid">
-            <div
-              v-for="index in inputCount"
-              :key="index"
-              class="input-wrapper"
-            >
-              <label :for="`answer-${index}`">Gap {{ index }}:</label>
-              <textarea
-                :id="`answer-${index}`"
-                v-model="userAnswers[index - 1]"
-                class="answer-input"
-                :placeholder="`Enter your answer for gap ${index}`"
-                rows="4"
-                style="font-size: 20px;"
-              ></textarea>
+          <h3 v-if="taskType === 'skips'">Your Answers:</h3>
+          <h3 v-else-if="taskType === 'noises'">Submission Results:</h3>
+          
+          <!-- Skips task interface -->
+          <div v-if="taskType === 'skips'">
+            <div v-if="inputCount === 0" class="no-inputs-message">
+              No gaps to fill in this problem.
+            </div>
+            <div v-else class="inputs-grid">
+              <div
+                v-for="index in inputCount"
+                :key="index"
+                class="input-wrapper"
+              >
+                <label :for="`answer-${index}`">Gap {{ index }}:</label>
+                <textarea
+                  :id="`answer-${index}`"
+                  v-model="userAnswers[index - 1]"
+                  class="answer-input"
+                  :placeholder="`Enter your answer for gap ${index}`"
+                  rows="2"
+                  style="font-size: 20px;"
+                ></textarea>
+              </div>
             </div>
           </div>
+
+          <!-- Noises task interface -->
+          <div v-else-if="taskType === 'noises'">
+            <div v-if="submissionResult.score === -1 && submissionResult.hints.length === 0" class="no-submissions-message">
+              No submissions yet. Make your first one!
+            </div>
+            <div v-else class="submission-result">
+              <p class="score">Score: {{ submissionResult.score }}</p>
+              <div v-if="submissionResult.hints.length" class="hints">
+                <h4>Hints:</h4>
+                <ul>
+                  <li v-for="(hint, index) in submissionResult.hints" :key="index">{{ hint }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           <button
             class="submit-button"
             :class="{ 'inactive': isSubmitting }"
@@ -57,15 +79,6 @@
           </button>
           <div v-if="submissionError" class="error-message">
             {{ submissionError }}
-          </div>
-          <div v-if="submissionResult" class="submission-result">
-            <p class="score">Score: {{ submissionResult.score }}</p>
-            <div v-if="submissionResult.hints.length" class="hints">
-              <h4>Hints:</h4>
-              <ul>
-                <li v-for="(hint, index) in submissionResult.hints" :key="index">{{ hint }}</li>
-              </ul>
-            </div>
           </div>
         </div>
       </div>
@@ -79,20 +92,20 @@ import { useRoute } from 'vue-router'
 import api from './src/api/axios'
 
 const route = useRoute()
-const taskData = ref(null)
+const taskData = ref({})
 const loading = ref(true)
-const error = ref(null)
 const userAnswers = ref([])
 const codeMirrorContainer = ref(null)
 const codeMirrorTextarea = ref(null)
 const isSubmitting = ref(false)
 const submissionError = ref(null)
-const submissionResult = ref(null)
+const submissionResult = ref({ score: -1, hints: [] })
 const isDarkTheme = ref(false)
 let editorInstance = null
 
+const taskType = computed(() => taskData.value.taskType || '')
 const inputCount = computed(() => {
-  if (taskData.value && taskData.value.codeToSolve) {
+  if (taskData.value && taskData.value.codeToSolve && taskType.value === 'skips') {
     return (taskData.value.codeToSolve.match(/\uD83D\uDD11/g) || []).length
   }
   return 0
@@ -148,9 +161,8 @@ const loadLink = (href) => {
 const fetchTask = async (alias) => {
   console.log('fetchTask: Starting for alias:', alias)
   loading.value = true
-  error.value = null
   submissionError.value = null
-  submissionResult.value = null
+  submissionResult.value = { score: -1, hints: [] }
   if (editorInstance) {
     console.log('fetchTask: Destroying existing CodeMirror instance.')
     editorInstance.toTextArea()
@@ -161,9 +173,11 @@ const fetchTask = async (alias) => {
     const response = await api.get(`/task/${alias}`)
     taskData.value = response.data
     console.log('fetchTask: Task data received:', taskData.value)
-    userAnswers.value = Array(inputCount.value).fill('')
+    if (taskType.value === 'skips') {
+      userAnswers.value = Array(inputCount.value).fill('')
+    }
   } catch (err) {
-    error.value = err.message
+    taskData.value = { error: err.message }
     console.error('fetchTask: Error fetching task:', err)
   } finally {
     loading.value = false
@@ -189,7 +203,7 @@ const initializeCodeMirror = async () => {
       lineNumbers: true,
       mode: getMode(taskData.value.programmingLang),
       theme: isDarkTheme.value ? 'dracula' : 'default',
-      readOnly: true,
+      readOnly: taskType.value === 'skips',
       indentUnit: 4,
       tabSize: 4,
       lineWrapping: true
@@ -205,23 +219,22 @@ const submitAnswers = async () => {
   console.log('submitAnswers: Starting submission.')
   isSubmitting.value = true
   submissionError.value = null
-  submissionResult.value = null
+  submissionResult.value = { score: -1, hints: [] }
 
   const taskAlias = route.params.id
-  const taskType = taskData.value.taskType
   let endpoint, payload
 
   try {
-    if (taskType === 'skips') {
+    if (taskType.value === 'skips') {
       endpoint = '/skips/solve'
       payload = {
         answers: userAnswers.value,
         taskAlias
       }
-    } else if (taskType === 'noises') {
+    } else if (taskType.value === 'noises') {
       endpoint = '/noises/solve'
       payload = {
-        answer: 'placeholder_answer',
+        answer: editorInstance.getValue(),
         taskAlias
       }
     } else {
@@ -255,7 +268,7 @@ const submitAnswers = async () => {
           }
         } else if (statusData.isCorrect === 'Failed') {
           clearInterval(checkInterval)
-          if (statusData.responseInfo.error) {
+          if (statusData.responseInfo?.error) {
             submissionError.value = statusData.responseInfo.error
           } else {
             submissionResult.value = {
@@ -445,11 +458,12 @@ input:checked + .slider:before {
 }
 
 .error-message,
-.no-inputs-message {
+.no-inputs-message,
+.no-submissions-message {
   text-align: center;
   font-size: 1.2em;
   color: var(--text-gray);
-  margin-top: 50px;
+  margin-top: 20px;
 }
 
 .error-message {
@@ -643,6 +657,10 @@ input:checked + .slider:before {
 
   .slider.dark-theme:after {
     font-size: 16px;
+  }
+
+  .input-wrapper textarea {
+    height: 80px;
   }
 
   input:checked + .slider:before {
