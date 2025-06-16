@@ -13,10 +13,9 @@
       <div class="footer-nav">
         <span class="nav-title">Explore Codular</span>
         <div class="nav-links">
-          <a href="#" @click.prevent="navigateTo('/gaps-generator')">Generate Gaps Problems</a>
-          <a href="#" @click.prevent="navigateTo('/noises')">Generate Noises Problems</a>
-          <a href="#" @click.prevent="navigateTo('/solve?type=skips')">Solve Random Gaps Task</a>
-          <a href="#" @click.prevent="navigateTo('/solve?type=noises')">Solve Random Noises Task</a>
+          <a href="#" @click.prevent="navigateTo('/generate-gaps')">Generate gaps</a>
+          <a href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
+          <a href="#" @click.prevent="navigateTo('/solve')">Solve problems</a>
         </div>
       </div>
 
@@ -56,9 +55,9 @@ const navigateTo = (path) => {
 }
 
 .footer-outer-wrapper {
-  background: #ffffff;
+  background: #000000;
   padding: 40px 20px;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .footer-content {
@@ -79,7 +78,7 @@ const navigateTo = (path) => {
   font-family: Friska, var(--default-font-family);
   font-size: 32px;
   font-weight: 700;
-  color: var(--primary-purple);
+  color: #ffffff;
   display: block;
   margin-bottom: 15px;
   cursor: pointer;
@@ -89,7 +88,7 @@ const navigateTo = (path) => {
   font-family: var(--default-font-family);
   font-size: 16px;
   font-weight: 400;
-  color: var(--text-gray);
+  color: #ffffff;
   line-height: 1.5;
   max-width: 400px;
 }
@@ -104,7 +103,7 @@ const navigateTo = (path) => {
   font-family: Friska, var(--default-font-family);
   font-size: 20px;
   font-weight: 600;
-  color: #333;
+  color: #ffffff;
   display: block;
   margin-bottom: 15px;
 }
@@ -119,7 +118,7 @@ const navigateTo = (path) => {
   font-family: var(--default-font-family);
   font-size: 16px;
   font-weight: 400;
-  color: var(--text-gray);
+  color: #ffffff;
   text-decoration: none;
   transition: color 0.2s ease;
 }

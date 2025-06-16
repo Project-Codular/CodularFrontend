@@ -13,7 +13,7 @@ const routes = [
   { path: '/', component: HomePage },
   { path: '/login', component: LoginForm },
   { path: '/start', component: HomePage },
-  { path: '/generate-gaps', component: FillGapsGenerator, meta: { requiresAuth: true } }, 
+  { path: '/generate-skips', component: FillGapsGenerator, meta: { requiresAuth: true } }, 
   { path: '/generate-noises', component: NoisesGenerator, meta: { requiresAuth: true } }, 
   { path: '/remove-noices', component: Test, meta: { requiresAuth: true } }, 
   { path: '/solve', component: Test, meta: { requiresAuth: true } },
