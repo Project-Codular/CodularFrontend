@@ -1,20 +1,21 @@
 <template>
   <div>
-    <AppHeader /> <router-view></router-view>
+    <AppHeader />
+    <router-view></router-view>
+    <AppFooter />
   </div>
 </template>
 
 <script setup>
-import AppHeader from './AppHeader.vue' // Импортируем новый компонент шапки
+import AppHeader from './AppHeader.vue'
+import AppFooter from './AppFooter.vue'
 </script>
 
 <script>
-import TaskGenerator from './test.vue'
-
 export default {
   components: {
-    TaskGenerator,
-    AppHeader, // Регистрируем AppHeader
+    AppHeader,
+    AppFooter,
   },
 }
 </script>
