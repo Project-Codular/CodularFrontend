@@ -1,461 +1,334 @@
 <template>
-  <div class="task-container">
-    <!-- Заголовок и иконка настроек -->
-    <div class="task-header">
-      <h2 class="task-title">{{ task.description || 'Задача по программированию' }}</h2>
-      <button @click="toggleSettings" class="settings-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-      </button>
+  <div class="task-page-wrapper">
+    <div v-if="loading" class="loading-message">Loading task...</div>
+    <div v-else-if="error" class="error-message">
+      Error loading task: {{ error }}
     </div>
+    <div v-else class="task-content">
+      <h2 class="task-description">{{ taskData.description }}</h2>
 
-    <!-- Блок с кодом задачи -->
-    <!-- Поле для вставки пользовательского кода -->
-
-    <div class="code-block">
-      <div class="code-header">
-        <span>Код для решения</span>
-        <button @click="copyCode" class="copy-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-          Копировать
-        </button>
-      </div>
-      <pre class="code-content">{{ task.codeToSolve }}</pre>
-    </div>
-<!--    <textarea-->
-<!--        v-model="task.codeToSolve"-->
-<!--        placeholder="Вставьте сюда код..."-->
-<!--        rows="8"-->
-<!--        class="code-textarea"-->
-<!--    ></textarea>-->
-    <!-- Ссылка для общего доступа -->
-    <div class="share-link">
-      <input
-          type="text"
-          :value="taskLink"
-          readonly
-          class="link-input"
-          ref="linkInput"
-      >
-      <button @click="copyLink" class="link-copy-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Панель настроек (выдвижная) -->
-    <div class="settings-panel" :class="{ 'visible': showSettings }">
-      <div class="settings-content">
-        <h3>Настройки задачи</h3>
-
-        <div class="setting-item">
-          <label class="switch">
-            <input type="checkbox" v-model="isPublic" @change="updatePublicStatus">
-            <span class="slider round"></span>
-          </label>
-          <span class="setting-label">Публичная задача</span>
+      <div class="code-and-inputs-container">
+        <div class="code-section">
+          <h3>Code to Solve:</h3>
+          <div ref="codeMirrorContainer" class="codemirror-wrapper"></div>
         </div>
 
-        <h4 class="regenerate-title">Регенерация задачи</h4>
-
-        <div class="setting-item">
-          <label>Количество пропусков:</label>
-          <div class="slider-container">
-            <input
-                type="range"
-                v-model.number="skipsNumber"
-                min="1"
-                max="10"
-                class="compact-slider"
-            >
-            <span class="slider-value">{{ skipsNumber }}</span>
+        <div class="answers-section">
+          <h3>Your Answers:</h3>
+          <div v-if="inputCount === 0" class="no-inputs-message">
+            No gaps to fill in this problem.
           </div>
+          <div v-else class="inputs-grid">
+            <div
+              v-for="index in inputCount"
+              :key="index"
+              class="input-wrapper"
+            >
+              <label :for="`answer-${index}`">Gap {{ index }}:</label>
+              <textarea
+                :id="`answer-${index}`"
+                v-model="userAnswers[index - 1]"
+                class="answer-input"
+                rows="4"
+              ></textarea>
+            </div>
+          </div>
+          <button class="submit-button" @click="submitAnswers">Submit</button>
         </div>
-
-        <button @click="regenerateTask" class="regenerate-btn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-            <path d="M3 3v5h5"/>
-            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-            <path d="M16 16h5v5"/>
-          </svg>
-          Сгенерировать заново
-        </button>
       </div>
     </div>
-
-    <!-- Затемнение фона при открытых настройках -->
-    <div class="overlay" :class="{ 'visible': showSettings }" @click="toggleSettings"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from './src/stores/auth'
-import {useTaskStore} from "./src/stores/task";
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
+import api from './src/api/axios'
+import { basicSetup } from 'codemirror'
+import { EditorState } from '@codemirror/state'
+import { EditorView, keymap } from '@codemirror/view'
+import { oneDark } from '@codemirror/theme-one-dark'
+import { indentWithTab } from '@codemirror/commands'
 
 const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const taskStore = useTaskStore()
-const linkInput = ref(null)
+const taskData = ref(null)
+const loading = ref(true)
+const error = ref(null)
+const userAnswers = ref([])
+const codeMirrorContainer = ref(null)
+let editorView = null
 
-const task = ref({
-  codeToSolve: '',
-  description: '',
-  canEdit: false
+const inputCount = computed(() => {
+  if (taskData.value && taskData.value.codeToSolve) {
+    return (taskData.value.codeToSolve.match(/\uD83D\uDD11/g) || []).length
+  }
+  return 0
 })
 
-const showSettings = ref(false)
-const isPublic = ref(false)
-const skipsNumber = ref(3)
+const fetchTask = async (alias) => {
+  console.log('fetchTask: Starting for alias:', alias)
+  loading.value = true
+  error.value = null
+  if (editorView) {
+    console.log('fetchTask: Destroying existing CodeMirror instance.')
+    editorView.destroy()
+    editorView = null
+  }
 
-// Получаем задачу при загрузке компонента
-onMounted(async () => {
   try {
+    const response = await api.get(`/task/${alias}`)
+    taskData.value = response.data
+    console.log('fetchTask: Task data received:', taskData.value)
+    userAnswers.value = Array(inputCount.value).fill('')
+  } catch (err) {
+    error.value = err.message
+    console.error('fetchTask: Error fetching task:', err)
+  } finally {
+    loading.value = false
+    console.log('fetchTask: Loading finished.')
+  }
+}
 
-    const response = await fetch(`https://api.codular.ru/api/v1/task/${taskStore.taskAlias}`, {
-      headers: {
-        'Authorization': `Bearer ${authStore.accessToken}`
-      }
-    })
+const initializeCodeMirror = () => {
+  console.log('initializeCodeMirror: Attempting initialization.')
+  console.log('initializeCodeMirror: codeMirrorContainer.value:', codeMirrorContainer.value)
+  console.log('initializeCodeMirror: taskData.value?.codeToSolve:', taskData.value?.codeToSolve)
 
-    if (!response.ok) throw new Error('Failed to load task')
-
-    const data = await response.json()
-    task.value = {
-      codeToSolve: data.codeToSolve,
-      description: data.description,
-      canEdit: data.canEdit
+  if (codeMirrorContainer.value && taskData.value && taskData.value.codeToSolve) {
+    if (editorView && editorView.dom.parentNode === codeMirrorContainer.value) {
+      console.log('initializeCodeMirror: Destroying old editor in same container.')
+      editorView.destroy()
     }
 
-  } catch (error) {
-    console.error('Error loading task:', error)
+    const startState = EditorState.create({
+      doc: taskData.value.codeToSolve,
+      extensions: [
+        basicSetup,
+        oneDark,
+        EditorView.lineWrapping,
+        EditorView.editable.of(false),
+        keymap.of([indentWithTab]),
+      ],
+    })
+
+    editorView = new EditorView({
+      state: startState,
+      parent: codeMirrorContainer.value,
+    })
+    console.log('initializeCodeMirror: CodeMirror initialized successfully!')
+  } else if (codeMirrorContainer.value && !taskData.value?.codeToSolve) {
+      console.log('initializeCodeMirror: No codeToSolve found, ensuring editor is destroyed.')
+      if (editorView) {
+          editorView.destroy();
+          editorView = null;
+      }
+  } else {
+      console.log('initializeCodeMirror: Conditions not met for initialization (container or data missing).')
+  }
+}
+
+const submitAnswers = () => {
+  console.log('User Answers:', userAnswers.value)
+  alert('Answers submitted! Check console for values.')
+}
+
+onMounted(() => {
+  console.log('onMounted: Component mounted.')
+  if (route.params.id) {
+    fetchTask(route.params.id)
   }
 })
 
-// Ссылка для общего доступа
-const taskLink = computed(() => {
-  return `https://api.codular.ru/api/v1/task/${taskStore.taskAlias}`
-})
+watch(() => taskData.value?.codeToSolve, (newCode) => {
+    console.log('Watcher (taskData.value?.codeToSolve): Detected change. New code:', newCode)
+    if (newCode !== undefined && newCode !== null) {
+        nextTick(() => {
+            initializeCodeMirror();
+        });
+    }
+}, { immediate: false });
 
-// Переключение панели настроек
-const toggleSettings = () => {
-  showSettings.value = !showSettings.value
-  document.body.style.overflow = showSettings.value ? 'hidden' : 'auto'
-}
-
-// Регенерация задачи
-const regenerateTask = async () => {
-  try {
-    const response = await fetch(`https://api.codular.ru/api/v1/task/${taskStore.taskAlias}/regenerate`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
-      body: JSON.stringify({
-        skipsNumber: skipsNumber.value
-      })
-    })
-
-    if (!response.ok) throw new Error('Regeneration failed')
-
-    const result = await response.json()
-    await navigateTo(`/task/${result.taskAlias}`)
-    showSettings.value = false
-
-  } catch (error) {
-    console.error('Error regenerating task:', error)
+watch(
+  () => route.params.id,
+  (newId) => {
+    console.log('Watcher (route.params.id): Detected change. New ID:', newId)
+    if (newId) {
+      fetchTask(newId)
+    }
   }
-}
-
-// Копирование кода
-const copyCode = () => {
-  navigator.clipboard.writeText(task.value.codeToSolve)
-      .then(() => alert('Код скопирован в буфер обмена'))
-      .catch(err => console.error('Copy failed:', err))
-}
-const navigateTo = (path) => {
-  if (route.path !== path || path === '/') {
-    router.push(path)
-  }
-}
-// Копирование ссылки
-const copyLink = () => {
-  linkInput.value.select()
-  document.execCommand('copy')
-  alert('Ссылка скопирована в буфер обмена')
-}
-
-// Обновление публичности задачи
-const updatePublicStatus = async () => {
-  try {
-    await fetch(`https://api.codular.ru/api/v1/task/${route.params.alias}/set-public`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.accessToken}`
-      },
-      body: JSON.stringify({
-        public: isPublic.value
-      })
-    })
-  } catch (error) {
-    console.error('Error updating public status:', error)
-  }
-}
+)
 </script>
 
 <style scoped>
-.task-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: 'Roboto', sans-serif;
-  position: relative;
+/*
+  Важное примечание: `scoped` стили в Vue добавляют уникальный атрибут к элементам
+  компонента (например, `data-v-xyz123`).
+  Если CodeMirror или другие библиотеки вставляют свои элементы,
+  которые не имеют этого атрибута, то `scoped` стили могут на них не распространяться.
+  Для CodeMirror, его `.cm-editor` класс генерируется библиотекой, и он не будет
+  иметь атрибут `data-v-xyz123`. Поэтому, чтобы стили применялись,
+  мы можем либо:
+  1. Создать отдельный CSS-файл для глобальных стилей CodeMirror и импортировать его.
+  2. Использовать глубокий селектор (deep selector) типа `::v-deep` или `/deep/` (устарел, но может работать).
+     Однако, в Composition API с `<style scoped>` и `<script setup>`,
+     часто достаточно простого селектора, так как некоторые стили CodeMirror
+     могут быть применены глобально через импорт `basicSetup` или других расширений.
+     Проблема обычно в специфичности.
+*/
+
+:root {
+  --default-font-family: Friska, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, Ubuntu, 'Helvetica Neue', Helvetica, Helvetica, Arial,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft Yahei UI', 'Microsoft Yahei',
+    'Source Han Sans CN', sans-serif;
+  --primary-purple: #4f46e5;
+  --text-gray: #6f6a6a;
+  --white: #ffffff;
+  --border-radius-lg: 15px;
 }
 
-.task-header {
+.task-page-wrapper {
+  max-width: 1437px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: var(--default-font-family);
+}
+
+.loading-message,
+.error-message,
+.no-inputs-message {
+  text-align: center;
+  font-size: 1.2em;
+  color: var(--text-gray);
+  margin-top: 50px;
+}
+
+.error-message {
+  color: #e54646;
+}
+
+.task-description {
+  font-size: 2em;
+  font-weight: 700;
+  color: var(--primary-purple);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.code-and-inputs-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 40px;
+  margin-top: 30px;
+}
+
+.code-section,
+.answers-section {
+  flex: 1;
+  background: var(--white);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.code-section h3,
+.answers-section h3 {
+  font-size: 1.5em;
+  font-weight: 600;
+  color: var(--primary-purple);
   margin-bottom: 20px;
 }
 
-.task-title {
-  font-size: 1.5rem;
-  color: #333;
-  margin: 0;
-}
-
-.settings-btn {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  color: #666;
-  transition: color 0.2s;
-}
-
-.settings-btn:hover {
-  color: #4f46e5;
-}
-
-.code-block {
-  background: #f8f9fa;
+.codemirror-wrapper {
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 20px;
 }
 
-.code-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background: #e9ecef;
-  font-weight: 500;
+.codemirror-wrapper >>> .cm-editor,
+.codemirror-wrapper :deep(.cm-editor)
+{
+  font-size: 1.4em !important;
+  height: 400px;
+  border-radius: 8px;
 }
 
-.copy-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: #495057;
-  cursor: pointer;
+.cm-editor.cm-scroller {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+  }
 }
 
-.code-content {
-  padding: 16px;
-  margin: 0;
-  white-space: pre-wrap;
-  background: white;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.share-link {
-  display: flex;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.link-input {
-  flex-grow: 1;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px 0 0 6px;
-  font-size: 14px;
-}
-
-.link-copy-btn {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-left: none;
-  border-radius: 0 6px 6px 0;
-  background: #f8f9fa;
-  cursor: pointer;
-}
-
-/* Панель настроек */
-.settings-panel {
-  position: fixed;
-  top: 0;
-  right: -400px;
-  width: 350px;
-  height: 100vh;
-  background: white;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  transition: right 0.3s ease;
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-.settings-panel.visible {
-  right: 0;
-}
-
-.settings-content {
-  display: flex;
-  flex-direction: column;
+.inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
 }
 
-.settings-content h3 {
-  margin: 0 0 20px 0;
-  font-size: 1.2rem;
-  color: #333;
-}
-
-.setting-item {
+.input-wrapper {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
 }
 
-.setting-item label {
-  font-size: 14px;
-  min-width: 150px;
+.input-wrapper label {
+  font-size: 0.9em;
+  color: var(--text-gray);
+  margin-bottom: 5px;
 }
 
-.slider-input {
-  flex-grow: 1;
-}
-
-.regenerate-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: #4f46e5;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 20px;
-}
-
-.regenerate-btn:hover {
-  background: #3e38c2;
-}
-
-/* Затемнение фона */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-.overlay.visible {
-  opacity: 1;
-  pointer-events: all;
-}
-
-/* Переключатель */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 16px;
-  width: 16px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #4f46e5;
-}
-
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
-
-.slider.round {
-  border-radius: 24px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}.code-input {
-   margin-bottom: 20px;
- }
-
-.code-textarea {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
+.answer-input {
+  padding: 12px 15px;
+  border: 1px solid #d0d0d0;
   border-radius: 8px;
-  font-family: 'Roboto Mono', monospace;
-  font-size: 14px;
-  background-color: #fdfdfd;
+  font-size: 1em;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   resize: vertical;
+  min-height: 80px;
 }
 
+.answer-input:focus {
+  outline: none;
+  border-color: var(--primary-purple);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+/* Изменения для кнопки Submit */
+.answers-section .submit-button {
+  display: block;
+  width: 200px;
+  padding: 15px 25px;
+  margin: 30px auto 0;
+  background: #3e38c2;
+  color: #ffffff; 
+  border: none;
+  border-radius: 15px;
+  font-size: 1.2em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.answers-section .submit-button:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.answers-section .submit-button:active,
+.answers-section .submit-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4);
+}
 </style>

@@ -1,3 +1,5 @@
+// src/api/router.js
+
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../../HomePage.vue'
 import Test from '../../test.vue'
