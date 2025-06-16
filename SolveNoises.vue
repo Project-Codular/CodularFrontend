@@ -129,9 +129,10 @@ onMounted(loadTasks)
 
 <style scoped>
 .solve-noises-page-wrapper {
+  width: 90%;
   max-width: 1437px;
-  margin: 40px auto;
-  padding: 20px;
+  margin: clamp(1rem, 2.5vw, 2.5rem) auto;
+  padding: clamp(0.625rem, 1.25vw, 1.25rem);
   font-family: Friska, var(--default-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Ubuntu, 'Helvetica Neue', Helvetica, Arial, sans-serif);
   position: relative;
   background: #ffffff;
@@ -143,10 +144,10 @@ onMounted(loadTasks)
 
 .loading-message {
   text-align: center;
-  font-size: 32px;
+  font-size: clamp(1.5rem, 2vw, 2rem);
   font-weight: 600;
   color: #6f6a6a;
-  margin-top: 50px;
+  margin-top: clamp(1.25rem, 3vw, 3.125rem);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
@@ -157,9 +158,9 @@ onMounted(loadTasks)
 
 .error-message {
   text-align: center;
-  font-size: 1.2em;
+  font-size: clamp(1rem, 1.5vw, 1.2em);
   color: #e54646;
-  margin-top: 20px;
+  margin-top: clamp(0.625rem, 1.25vw, 1.25rem);
 }
 
 .content-container {
@@ -171,25 +172,25 @@ onMounted(loadTasks)
 
 .section-header {
   font-family: Friska, var(--default-font-family);
-  font-size: 36px;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
   font-weight: 700;
   color: #4f46e5;
-  margin-bottom: 20px;
+  margin-bottom: clamp(0.625rem, 1.25vw, 1.25rem);
   text-align: center;
 }
 
 .tasks-list {
   width: 100%;
-  max-width: 800px;
+  max-width: clamp(20rem, 50vw, 50rem);
 }
 
 .task-item {
   display: flex;
   justify-content: space-between;
-  padding: 15px 20px;
-  margin-bottom: 10px;
+  padding: clamp(0.625rem, 1vw, 0.9375rem) clamp(0.625rem, 1.25vw, 1.25rem);
+  margin-bottom: clamp(0.3125rem, 0.625vw, 0.625rem);
   background: #f9f9f9;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -200,43 +201,43 @@ onMounted(loadTasks)
 
 .task-index, .task-language, .task-description {
   font-family: Friska, var(--default-font-family);
-  font-size: 18px;
+  font-size: clamp(0.9rem, 1.5vw, 1.125rem);
   color: #333;
 }
 
 .task-index {
   font-weight: 600;
-  width: 50px;
+  width: clamp(1.25rem, 3vw, 3.125rem);
 }
 
 .task-language {
-  width: 100px;
+  width: clamp(3rem, 6vw, 6.25rem);
   text-align: center;
 }
 
 .task-description {
   flex-grow: 1;
-  margin-left: 20px;
+  margin-left: clamp(0.625rem, 1.25vw, 1.25rem);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .load-more-button, .random-task-button {
-  padding: 12px 25px;
-  margin-top: 20px;
+  padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 2vw, 1.5625rem);
+  margin-top: clamp(0.625rem, 1.25vw, 1.25rem);
   background-color: #4f46e5;
   color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: 0.625rem;
   font-family: Friska, var(--default-font-family);
-  font-size: 18px;
+  font-size: clamp(0.9rem, 1.5vw, 1.125rem);
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: clamp(0.3125rem, 0.625vw, 0.625rem);
 }
 
 .load-more-button:hover:not(:disabled), .random-task-button:hover:not(:disabled) {
@@ -252,8 +253,8 @@ onMounted(loadTasks)
   border: 4px solid rgba(255, 255, 255, 0.3);
   border-top: 4px solid #ffffff;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: clamp(0.625rem, 1.25vw, 1.25rem);
+  height: clamp(0.625rem, 1.25vw, 1.25rem);
   animation: spin 1s linear infinite;
 }
 
@@ -263,6 +264,58 @@ onMounted(loadTasks)
 }
 
 .dice-icon {
-  font-size: 20px;
+  font-size: clamp(0.9rem, 1.25vw, 1.25rem);
+}
+
+@media (max-width: 768px) {
+  .tasks-list {
+    max-width: 100%;
+  }
+
+  .task-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: clamp(0.5rem, 1vw, 0.9375rem);
+  }
+
+  .task-index {
+    margin-bottom: 0.5rem;
+  }
+
+  .task-language {
+    margin-bottom: 0.5rem;
+    width: auto;
+  }
+
+  .task-description {
+    margin-left: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .load-more-button,
+  .random-task-button {
+    width: 100%;
+    max-width: 20rem;
+    margin: clamp(0.625rem, 1vw, 1.25rem) auto;
+  }
+}
+
+@media (max-width: 375px) {
+  .section-header {
+    font-size: clamp(1.2rem, 3vw, 1.875rem);
+  }
+
+  .task-index,
+  .task-language,
+  .task-description {
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+  }
+
+  .load-more-button,
+  .random-task-button {
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+  }
 }
 </style>

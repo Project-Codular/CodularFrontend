@@ -145,7 +145,7 @@ button {
   display: block;
   position: relative;
   height: auto;
-  margin: 7rem 0 0 0%;
+  margin: 10rem 0 0 0%;
   color: #000000;
   font-family: Friska, var(--default-font-family);
   font-size: clamp(3rem, 8vw, 5.3125rem);
@@ -203,7 +203,7 @@ button {
   display: block;
   position: relative;
   height: auto;
-  margin: 2rem auto 0;
+  margin: 5rem auto 0;
   font-family: Friska, var(--default-font-family);
   font-size: clamp(1.2rem, 2.5vw, 1.5rem);
   font-weight: 400;
@@ -240,7 +240,7 @@ button {
   width: 100%;
   height: auto;
   min-height: 40rem;
-  margin: 4rem 0 0 0;
+  margin: 8rem 0 0 0;
   font-size: 0;
   z-index: 14;
   overflow: hidden;
@@ -273,6 +273,7 @@ button {
 .noises-title-generate,
 .noises-title-solve {
   flex: 1 1 45%;
+  margin: 1.5rem 0 0 0;
   position: relative;
   height: auto;
   font-family: Friska, var(--default-font-family);
