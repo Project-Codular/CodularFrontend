@@ -48,8 +48,8 @@
         >
       </div>
       <div class="flex-row-fb">
-        <a class="try-now-left-solve" href="#" @click.prevent="navigateTo('/')">Try now →</a>
-        <a class="try-now-right-solve" href="#" @click.prevent="navigateTo('/')">Try now →</a>
+        <a class="try-now-left-solve" href="#" @click.prevent="navigateTo('/solve-skips')">Try now →</a>
+        <a class="try-now-right-solve" href="#" @click.prevent="navigateTo('/solve-noises')">Try now →</a>
       </div>
     </div>
   </div>

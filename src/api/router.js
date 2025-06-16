@@ -6,6 +6,8 @@ import Test from '../../test.vue'
 import LoginForm from '../../LoginForm.vue'
 import FillGapsGenerator from '../../GapsGenerator.vue'
 import NoisesGenerator from '../../NoisesGenerator.vue'
+import SolveSkipsPage from '../../SolveSkips.vue'
+import SolveNoises from '../../SolveNoises.vue'
 import { useAuthStore } from '../stores/auth'
 import AliasPage from "../../AliasPage.vue";
 
@@ -17,6 +19,8 @@ const routes = [
   { path: '/generate-noises', component: NoisesGenerator, meta: { requiresAuth: true } }, 
   { path: '/remove-noices', component: Test, meta: { requiresAuth: true } }, 
   { path: '/solve', component: Test, meta: { requiresAuth: true } },
+  { path: '/solve-skips', component: SolveSkipsPage, meta: { requiresAuth: true } },
+  { path: '/solve-noises', component: SolveNoises, meta: { requiresAuth: true } },
   { path: '/task/:id', component: AliasPage, meta: { requiresAuth: true } },
 ]
 
