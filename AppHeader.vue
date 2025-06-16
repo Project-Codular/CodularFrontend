@@ -7,7 +7,6 @@
         <a class="solve-problems" href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
         <a class="solve-problems" href="#solve-tasks-block" @click.prevent="navigateTo('/#solve-tasks-block')">Solve problems</a>
       </div>
-
       <div class="log-in-start">
         <template v-if="!authStore.isAuthenticated">
           <a class="log-in" href="#" @click.prevent="navigateToLogin()">Log in</a>
@@ -72,8 +71,6 @@ const navigateToRegister = () => {
 </script>
 
 <style scoped>
-/* Добавьте следующие стили в блок <style scoped> вашего AppHeader.vue */
-
 :root {
   --default-font-family: Friska, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     Ubuntu, 'Helvetica Neue', Helvetica, Helvetica, Arial, 'PingFang SC',
@@ -82,30 +79,31 @@ const navigateToRegister = () => {
 }
 
 .header-outer-wrapper {
-  background: #ffffff; /* Убедимся, что фон белый */
-  padding: 20px 0; /* Одинаковый отступ сверху и снизу (20px), по бокам 0 */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* Легкая тень, если нужна */
-  z-index: 100; /* Убедимся, что шапка всегда сверху */
-  position: relative; /* Чтобы z-index работал */
+  background: #ffffff;
+  padding: 20px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  position: relative;
 }
 
 .flex-row {
   position: relative;
-  width: 1437px; /* Или 100% с max-width и margin: auto */
-  height: 65px; /* Высота внутреннего контента */
-  margin: 0 auto; /* Центрируем содержимое шапки */
+  width: 90%;
+  max-width: 1437px;
+  height: auto;
+  margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Распределяем элементы по краям */
-  padding: 0 20px; /* Горизонтальные отступы внутри flex-row, вертикальные отступы теперь заданы на .header-outer-wrapper */
-  box-sizing: border-box; /* Учитываем padding в ширине */
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .code-genius {
   font-family: Friska, var(--default-font-family);
-  font-size: 36px;
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
   font-weight: 700;
-  color: #4f46e5; /* Цвет как в макете */
+  color: #4f46e5;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -114,16 +112,15 @@ const navigateToRegister = () => {
 .menu {
   display: flex;
   align-items: center;
-  gap: 40px; /* Отступ между элементами меню */
-  margin-left: auto; /* Сдвигаем меню вправо, отталкивая от .code-genius */
-  margin-right: 80px; /* Отступ между меню и блоком логина */
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+  margin: 0 auto;
 }
 
 .contribute-problem,
 .solve-problems {
   color: #6f6a6a;
   font-family: Friska, var(--default-font-family);
-  font-size: 22px;
+  font-size: clamp(1rem, 1.5vw, 1.375rem);
   font-weight: 400;
   text-decoration: none;
   white-space: nowrap;
@@ -138,29 +135,21 @@ const navigateToRegister = () => {
 .log-in-start {
   display: flex;
   align-items: center;
-  gap: 42px;
-  /* Убираем абсолютное позиционирование, так как flexbox сам справится */
-  /* position: relative; */ /* Если нужно позиционировать UserProfile внутри, то относительное */
-  /* width: 320px; */ /* Эти фиксированные размеры теперь не нужны из-за flexbox */
-  /* height: 65px; */
-  /* top: 0; */
-  /* left: 1117px; */
-  /* z-index: 5; */
+  gap: clamp(1rem, 2.5vw, 2.625rem);
 }
 
 .log-in {
   flex-shrink: 0;
   flex-basis: auto;
-  position: relative;
-  height: 55px;
+  height: auto;
   color: #6f6a6a;
   font-family: Friska, var(--default-font-family);
-  font-size: 22px;
+  font-size: clamp(1rem, 1.5vw, 1.375rem);
   font-weight: 400;
-  line-height: 55px;
+  line-height: 1.5;
   text-align: left;
   white-space: nowrap;
-  letter-spacing: 1.32px;
+  letter-spacing: 0.0825rem;
   text-decoration: none;
   z-index: 6;
 }
@@ -171,14 +160,13 @@ const navigateToRegister = () => {
   justify-content: center;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  position: relative;
-  width: 210px;
-  height: 65px;
+  width: clamp(8rem, 15vw, 13.125rem);
+  height: clamp(2.5rem, 4vw, 4rem);
   background: #4f46e5;
-  border-radius: 15px;
+  border-radius: 0.9375rem;
   color: #ffffff;
   font-family: Friska, var(--default-font-family);
-  font-size: 25px;
+  font-size: clamp(1rem, 1.5vw, 1.5625rem);
   font-weight: 500;
   text-align: center;
   text-decoration: none;
@@ -188,5 +176,50 @@ const navigateToRegister = () => {
 
 .get-started:hover {
   background-color: #3e38c2;
+}
+
+@media (max-width: 768px) {
+  .flex-row {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0 10px;
+  }
+
+  .code-genius {
+    margin-bottom: 0.5rem;
+  }
+
+  .menu {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .log-in-start {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .get-started {
+    width: 100%;
+    max-width: 13.125rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .code-genius {
+    font-size: clamp(1.2rem, 3vw, 1.875rem);
+  }
+
+  .contribute-problem,
+  .solve-problems,
+  .log-in {
+    font-size: clamp(0.9rem, 2vw, 1.125rem);
+  }
+
+  .get-started {
+    font-size: clamp(0.9rem, 2vw, 1.25rem);
+  }
 }
 </style>

@@ -145,13 +145,13 @@ button {
   display: block;
   position: relative;
   height: auto;
-  margin: 5rem 0 0 5%;
+  margin: 7rem 0 0 0%;
   color: #000000;
   font-family: Friska, var(--default-font-family);
   font-size: clamp(3rem, 8vw, 5.3125rem);
   font-weight: 400;
   line-height: 1.2;
-  text-align: left;
+  text-align: center;
   white-space: normal;
   z-index: 12;
 }
@@ -160,13 +160,13 @@ button {
   display: block;
   position: relative;
   height: auto;
-  margin: 1.5rem 0 0 5%;
+  margin: 1.5rem 0 0 0%;
   color: #000000;
   font-family: Helvetica, var(--default-font-family);
   font-size: clamp(1.2rem, 2.5vw, 1.4375rem);
   font-weight: 400;
   line-height: 1.5;
-  text-align: left;
+  text-align: center;
   white-space: normal;
   letter-spacing: 0.08625rem;
   z-index: 13;
