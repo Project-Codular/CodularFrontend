@@ -10,11 +10,18 @@
           <label for="themeToggle" class="label-text">Theme: {{ isDarkTheme ? 'Dark' : 'Light' }}</label>
           <label class="switch">
             <input type="checkbox" id="themeToggle" v-model="isDarkTheme" />
-            <span class="slider" :class="{ 'dark-theme': isDarkTheme }"></span>
+            <span class="theme-slider" :class="{ 'dark-theme': isDarkTheme }"></span>
           </label>
+        </div>
+        <div v-if="taskData.canEdit" class="control-group">
+          <button class="setup-button" @click="showModal = true">
+            Setup task <span class="gear-icon">⚙️</span>
+          </button>
         </div>
       </div>
       <h2 class="task-description">{{ taskData.description }}</h2>
+
+      <div v-if="taskType" class="task-type-label">{{ taskType === 'skips' ? 'Fill in the gaps task' : 'Remove noises task' }}</div>
 
       <div class="code-and-inputs-container">
         <div class="code-section">
@@ -82,6 +89,24 @@
           </div>
         </div>
       </div>
+
+      <!-- Modal for Setup Task -->
+      <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+        <div class="modal-content">
+          <span class="close-modal" @click="showModal = false">×</span>
+          <h3>Task Settings</h3>
+          <div class="control-group">
+            <label for="publicToggle" class="label-text">Task: {{ isPublic ? 'Public' : 'Private' }}</label>
+            <label class="switch">
+              <input type="checkbox" id="publicToggle" v-model="isPublic" @change="togglePublic" />
+              <span class="slider" :class="{ 'public-theme': isPublic }"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification -->
+      <div v-if="notification" class="notification">{{ notification }}</div>
     </div>
   </div>
 </template>
@@ -101,6 +126,9 @@ const isSubmitting = ref(false)
 const submissionError = ref(null)
 const submissionResult = ref({ score: -1, hints: [] })
 const isDarkTheme = ref(false)
+const isPublic = ref(false)
+const showModal = ref(false)
+const notification = ref(null)
 let editorInstance = null
 
 const taskType = computed(() => taskData.value.taskType || '')
@@ -172,6 +200,7 @@ const fetchTask = async (alias) => {
   try {
     const response = await api.get(`/task/${alias}`)
     taskData.value = response.data
+    isPublic.value = taskData.value.isPublic || false
     console.log('fetchTask: Task data received:', taskData.value)
     if (taskType.value === 'skips') {
       userAnswers.value = Array(inputCount.value).fill('')
@@ -305,6 +334,29 @@ const submitAnswers = async () => {
   }
 }
 
+const togglePublic = async () => {
+  const taskAlias = route.params.id
+  try {
+    const response = await api.patch(`/task/${taskAlias}/set-access`, { public: isPublic.value })
+    console.log('togglePublic: Response received:', response.data)
+    notification.value = 'Task updated successfully'
+    setTimeout(() => {
+      notification.value = null
+    }, 3000)
+  } catch (err) {
+    const status = err.response?.status || 500
+    let message = 'An error occurred'
+    if (status === 403) message = 'No permission to edit task'
+    else if (status === 404) message = 'Task not found'
+    else if (status === 500) message = 'Server error'
+    notification.value = message
+    setTimeout(() => {
+      notification.value = null
+    }, 3000)
+    isPublic.value = !isPublic.value // Revert the change on error
+  }
+}
+
 onMounted(async () => {
   console.log('onMounted: Component mounted.')
   if (route.params.id) {
@@ -355,12 +407,14 @@ watch(isDarkTheme, () => {
   margin: 40px auto;
   padding: 20px;
   font-family: var(--default-font-family);
+  position: relative;
 }
 
 .controls-row {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 20px;
+  gap: 20px;
 }
 
 .control-group {
@@ -392,6 +446,49 @@ watch(isDarkTheme, () => {
   height: 0;
 }
 
+.theme-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.theme-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.theme-slider:after {
+  position: absolute;
+  content: "☀️";
+  font-size: 20px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #000;
+  line-height: 34px;
+}
+
+.theme-slider.dark-theme:after {
+  content: "🌙";
+  left: 10px;
+  right: auto;
+  color: #fff;
+  line-height: 34px;
+}
+
 .slider {
   position: absolute;
   cursor: pointer;
@@ -418,7 +515,7 @@ watch(isDarkTheme, () => {
 
 .slider:after {
   position: absolute;
-  content: "☀️";
+  content: "🔒";
   font-size: 20px;
   right: 10px;
   top: 50%;
@@ -427,12 +524,29 @@ watch(isDarkTheme, () => {
   line-height: 34px;
 }
 
-.slider.dark-theme:after {
-  content: "🌙";
+.slider.public-theme:after {
+  content: "🌐";
   left: 10px;
   right: auto;
   color: #fff;
   line-height: 34px;
+}
+
+.slider:not(.public-theme):after {
+  content: "🔒";
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #000;
+  line-height: 34px;
+}
+
+input:checked + .theme-slider {
+  background-color: #4f46e5;
+}
+
+input:checked + .theme-slider:before {
+  transform: translateX(46px);
 }
 
 input:checked + .slider {
@@ -441,6 +555,29 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(46px);
+}
+
+.setup-button {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  border-radius: 15px;
+  font-family: Friska, var(--default-font-family);
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.setup-button:hover {
+  background-color: #3e38c2;
+}
+
+.gear-icon {
+  margin-left: 8px;
 }
 
 .loading-message {
@@ -468,6 +605,14 @@ input:checked + .slider:before {
 
 .error-message {
   color: #e54646;
+}
+
+.task-type-label {
+  font-size: 1.5em;
+  color: var(--text-gray);
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: normal;
 }
 
 .task-description {
@@ -508,7 +653,7 @@ input:checked + .slider:before {
 }
 
 .codemirror-wrapper :deep(.CodeMirror) {
-  font-size: 1.4em !important;
+  font-size: 1.38em !important; /* Reduced by ~2px from 1.4em */
   height: 400px;
   border-radius: 8px;
   font-family: 'Roboto Mono', monospace;
@@ -638,6 +783,58 @@ input:checked + .slider:before {
   margin-bottom: 5px;
 }
 
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: var(--border-radius-lg);
+  position: relative;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+.notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  z-index: 1100;
+  animation: fadeInOut 3s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @media (max-width: 768px) {
   .code-and-inputs-container {
     flex-direction: column;
@@ -651,16 +848,28 @@ input:checked + .slider:before {
     width: 60px;
   }
 
+  .theme-slider:after {
+    font-size: 16px;
+  }
+
+  .theme-slider.dark-theme:after {
+    font-size: 16px;
+  }
+
   .slider:after {
     font-size: 16px;
   }
 
-  .slider.dark-theme:after {
+  .slider.public-theme:after {
     font-size: 16px;
   }
 
   .input-wrapper textarea {
     height: 80px;
+  }
+
+  input:checked + .theme-slider:before {
+    transform: translateX(26px);
   }
 
   input:checked + .slider:before {
@@ -673,6 +882,10 @@ input:checked + .slider:before {
 
   .loading-message {
     font-size: 24px;
+  }
+
+  .modal-content {
+    width: 90%;
   }
 }
 </style>

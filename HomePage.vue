@@ -24,8 +24,8 @@
             >Users can practice identifying and removing extra code lines</span>
       </div>
       <div class="flex-row-fb">
-        <a class="try-now-left-generate" href="#" @click.prevent="navigateTo('/fill-skips')">Try now →</a>
-        <a class="try-now-right-generate" href="#" @click.prevent="navigateTo('/remove-noices')">Try now →</a>
+        <a class="try-now-left-generate" href="#" @click.prevent="navigateTo('/generate-skips')">Try now →</a>
+        <a class="try-now-right-generate" href="#" @click.prevent="navigateTo('/generate-noices')">Try now →</a>
       </div>
     </div>
 
