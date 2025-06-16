@@ -5,7 +5,7 @@
       <div class="menu">
         <a class="contribute-problem" href="#" @click.prevent="navigateTo('/generate-gaps')">Generate gaps</a>
         <a class="solve-problems" href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
-        <a class="solve-problems" href="#" @click.prevent="navigateTo('/solve')">Solve problems</a>
+        <a class="solve-problems" href="#generate-tasks-block">Solve problems</a>
       </div>
 
       <div class="log-in-start">
