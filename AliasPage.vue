@@ -29,7 +29,9 @@
                 :id="`answer-${index}`"
                 v-model="userAnswers[index - 1]"
                 class="answer-input"
+                :placeholder="`Enter your answer for gap ${index}`"
                 rows="4"
+                style="font-size: 20px;"
               ></textarea>
             </div>
           </div>
