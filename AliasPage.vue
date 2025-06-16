@@ -35,7 +35,27 @@
               ></textarea>
             </div>
           </div>
-          <button class="submit-button" @click="submitAnswers">Submit</button>
+          <button
+            class="submit-button"
+            :class="{ 'inactive': isSubmitting }"
+            :disabled="isSubmitting"
+            @click="submitAnswers"
+          >
+            <span v-if="isSubmitting" class="spinner"></span>
+            <span>{{ isSubmitting ? 'Checking...' : 'Submit' }}</span>
+          </button>
+          <div v-if="submissionError" class="error-message">
+            {{ submissionError }}
+          </div>
+          <div v-if="submissionResult" class="submission-result">
+            <p class="score">Score: {{ submissionResult.score }}</p>
+            <div v-if="submissionResult.hints.length" class="hints">
+              <h4>Hints:</h4>
+              <ul>
+                <li v-for="(hint, index) in submissionResult.hints" :key="index">{{ hint }}</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -51,6 +71,9 @@ import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { indentWithTab } from '@codemirror/commands'
+import { python } from '@codemirror/lang-python'
+import { java } from '@codemirror/lang-java'
+import { cpp } from '@codemirror/lang-cpp'
 
 const route = useRoute()
 const taskData = ref(null)
@@ -58,6 +81,9 @@ const loading = ref(true)
 const error = ref(null)
 const userAnswers = ref([])
 const codeMirrorContainer = ref(null)
+const isSubmitting = ref(false)
+const submissionError = ref(null)
+const submissionResult = ref(null)
 let editorView = null
 
 const inputCount = computed(() => {
@@ -67,10 +93,25 @@ const inputCount = computed(() => {
   return 0
 })
 
+const getLanguageExtension = (lang) => {
+  switch (lang?.toLowerCase()) {
+    case 'python':
+      return python()
+    case 'java':
+      return java()
+    case 'cpp':
+      return cpp()
+    default:
+      return []
+  }
+}
+
 const fetchTask = async (alias) => {
   console.log('fetchTask: Starting for alias:', alias)
   loading.value = true
   error.value = null
+  submissionError.value = null
+  submissionResult.value = null
   if (editorView) {
     console.log('fetchTask: Destroying existing CodeMirror instance.')
     editorView.destroy()
@@ -108,8 +149,9 @@ const initializeCodeMirror = () => {
         basicSetup,
         oneDark,
         EditorView.lineWrapping,
-        EditorView.editable.of(false),
+        EditorView.editable.of(taskData.value.canEdit || false),
         keymap.of([indentWithTab]),
+        getLanguageExtension(taskData.value.programmingLang)
       ],
     })
 
@@ -119,19 +161,107 @@ const initializeCodeMirror = () => {
     })
     console.log('initializeCodeMirror: CodeMirror initialized successfully!')
   } else if (codeMirrorContainer.value && !taskData.value?.codeToSolve) {
-      console.log('initializeCodeMirror: No codeToSolve found, ensuring editor is destroyed.')
-      if (editorView) {
-          editorView.destroy();
-          editorView = null;
-      }
+    console.log('initializeCodeMirror: No codeToSolve found, ensuring editor is destroyed.')
+    if (editorView) {
+      editorView.destroy()
+      editorView = null
+    }
   } else {
-      console.log('initializeCodeMirror: Conditions not met for initialization (container or data missing).')
+    console.log('initializeCodeMirror: Conditions not met for initialization (container or data missing).')
   }
 }
 
-const submitAnswers = () => {
-  console.log('User Answers:', userAnswers.value)
-  alert('Answers submitted! Check console for values.')
+const submitAnswers = async () => {
+  console.log('submitAnswers: Starting submission.')
+  isSubmitting.value = true
+  submissionError.value = null
+  submissionResult.value = null
+
+  const taskAlias = route.params.id
+  const taskType = taskData.value.taskType
+  let endpoint, payload
+
+  try {
+    if (taskType === 'skips') {
+      endpoint = '/skips/solve'
+      payload = {
+        answers: userAnswers.value,
+        taskAlias
+      }
+    } else if (taskType === 'noises') {
+      endpoint = '/noises/solve'
+      payload = {
+        answer: 'placeholder_answer', // Placeholder as instructed
+        taskAlias
+      }
+    } else {
+      throw new Error('Unknown task type')
+    }
+
+    console.log('submitAnswers: Sending request to', endpoint, 'with payload:', payload)
+    const response = await api.post(`${endpoint}`, payload)
+    console.log('submitAnswers: Response received:', response.data)
+
+    const { submissionId } = response.data
+    if (!submissionId) {
+      throw new Error('No submission ID received')
+    }
+
+    // Start polling submission status
+    let attempts = 0
+    const maxAttempts = 30
+    const checkInterval = setInterval(async () => {
+      try {
+        attempts++
+        console.log('Polling submission status for ID:', submissionId, 'Attempt:', attempts)
+        const statusResponse = await api.get(`/submission-status/${submissionId}`)
+        const statusData = statusResponse.data
+        console.log('Polling response:', statusData)
+
+        if (statusData.isCorrect === 'Pending') {
+          // Continue polling
+          if (attempts >= maxAttempts) {
+            clearInterval(checkInterval)
+            submissionError.value = 'Submission check timed out'
+            isSubmitting.value = false
+          }
+        } else if (statusData.isCorrect === 'Failed') {
+          clearInterval(checkInterval)
+          if (statusData.responseInfo.error) {
+            submissionError.value = statusData.responseInfo.error
+          } else {
+            submissionResult.value = {
+              score: statusData.score,
+              hints: statusData.hints || []
+            }
+          }
+          isSubmitting.value = false
+        } else {
+          clearInterval(checkInterval)
+          submissionResult.value = {
+            score: statusData.score,
+            hints: statusData.hints || []
+          }
+          isSubmitting.value = false
+        }
+      } catch (err) {
+        console.error('Polling error:', err)
+        if (attempts >= maxAttempts) {
+          clearInterval(checkInterval)
+          submissionError.value = 'Failed to check submission status'
+          isSubmitting.value = false
+        }
+      }
+    }, 2000)
+
+    onMounted(() => {
+      return () => clearInterval(checkInterval)
+    })
+  } catch (err) {
+    console.error('submitAnswers: Error:', err)
+    submissionError.value = `Submission error: ${err.message}`
+    isSubmitting.value = false
+  }
 }
 
 onMounted(() => {
@@ -142,42 +272,23 @@ onMounted(() => {
 })
 
 watch(() => taskData.value?.codeToSolve, (newCode) => {
-    console.log('Watcher (taskData.value?.codeToSolve): Detected change. New code:', newCode)
-    if (newCode !== undefined && newCode !== null) {
-        nextTick(() => {
-            initializeCodeMirror();
-        });
-    }
-}, { immediate: false });
-
-watch(
-  () => route.params.id,
-  (newId) => {
-    console.log('Watcher (route.params.id): Detected change. New ID:', newId)
-    if (newId) {
-      fetchTask(newId)
-    }
+  console.log('Watcher (taskData.value?.codeToSolve): Detected change. New code:', newCode)
+  if (newCode !== undefined && newCode !== null) {
+    nextTick(() => {
+      initializeCodeMirror()
+    })
   }
-)
+}, { immediate: false })
+
+watch(() => route.params.id, (newId) => {
+  console.log('Watcher (ID): Detected change. New ID:', newId)
+  if (newId) {
+    fetchTask(newId)
+  }
+})
 </script>
 
 <style scoped>
-/*
-  Важное примечание: `scoped` стили в Vue добавляют уникальный атрибут к элементам
-  компонента (например, `data-v-xyz123`).
-  Если CodeMirror или другие библиотеки вставляют свои элементы,
-  которые не имеют этого атрибута, то `scoped` стили могут на них не распространяться.
-  Для CodeMirror, его `.cm-editor` класс генерируется библиотекой, и он не будет
-  иметь атрибут `data-v-xyz123`. Поэтому, чтобы стили применялись,
-  мы можем либо:
-  1. Создать отдельный CSS-файл для глобальных стилей CodeMirror и импортировать его.
-  2. Использовать глубокий селектор (deep selector) типа `::v-deep` или `/deep/` (устарел, но может работать).
-     Однако, в Composition API с `<style scoped>` и `<script setup>`,
-     часто достаточно простого селектора, так как некоторые стили CodeMirror
-     могут быть применены глобально через импорт `basicSetup` или других расширений.
-     Проблема обычно в специфичности.
-*/
-
 :root {
   --default-font-family: Friska, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, Ubuntu, 'Helvetica Neue', Helvetica, Helvetica, Arial,
@@ -246,9 +357,7 @@ watch(
   overflow: hidden;
 }
 
-.codemirror-wrapper >>> .cm-editor,
-.codemirror-wrapper :deep(.cm-editor)
-{
+.codemirror-wrapper :deep(.cm-editor) {
   font-size: 1.4em !important;
   height: 400px;
   border-radius: 8px;
@@ -307,30 +416,85 @@ watch(
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
-/* Изменения для кнопки Submit */
-.answers-section .submit-button {
-  display: block;
+.submit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 200px;
   padding: 15px 25px;
   margin: 30px auto 0;
   background: #3e38c2;
-  color: #ffffff; 
+  color: #ffffff;
   border: none;
   border-radius: 15px;
   font-size: 1.2em;
   font-weight: 500;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, opacity 0.3s ease;
+  gap: 10px;
 }
 
-.answers-section .submit-button:hover {
+.submit-button:hover:not(.inactive) {
   transform: scale(1.04);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-.answers-section .submit-button:active,
-.answers-section .submit-button:focus {
+.submit-button:active:not(.inactive),
+.submit-button:focus:not(.inactive) {
   outline: none;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.4);
+}
+
+.submit-button.inactive {
+  background-color: #d0d0d0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.submission-result {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.score {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: var(--primary-purple);
+}
+
+.hints {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.hints h4 {
+  font-size: 1.1em;
+  color: var(--text-gray);
+  margin-bottom: 10px;
+}
+
+.hints ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.hints li {
+  font-size: 1em;
+  color: var(--text-gray);
+  margin-bottom: 5px;
 }
 </style>

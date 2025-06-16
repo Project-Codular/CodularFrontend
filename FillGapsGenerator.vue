@@ -9,18 +9,16 @@
         <div class="control-group">
           <label for="language" class="label-text">Language</label>
           <select id="language" v-model="selectedLanguage" class="select-field">
-            <option value="JavaScript">JavaScript</option>
             <option value="Python">Python</option>
             <option value="Java">Java</option>
-            <option value="Csharp">C#</option>
             <option value="Cpp">C++</option>
           </select>
         </div>
         <div class="control-group">
-          <label for="themeToggle" class="label-text">Theme</label>
+          <label for="themeToggle" class="label-text">Theme: {{ isDarkTheme ? 'Dark' : 'Light' }}</label>
           <label class="switch">
             <input type="checkbox" id="themeToggle" v-model="isDarkTheme" />
-            <span class="slider"></span>
+            <span class="slider" :class="{ 'dark-theme': isDarkTheme }"></span>
           </label>
         </div>
         <button class="generate-button" @click="generateGaps" :disabled="isLoading">
@@ -60,7 +58,7 @@ const authStore = useAuthStore()
 const taskStore = useTaskStore()
 
 const gapsNumber = ref(1)
-const selectedLanguage = ref('JavaScript')
+const selectedLanguage = ref('Python')
 const editorEl = ref(null)
 const resultEditorEl = ref(null)
 const error = ref('')
@@ -70,6 +68,12 @@ const isDarkTheme = ref(false)
 
 let editorInstance = null
 let resultEditorInstance = null
+
+const codeExamples = {
+  Python: `def greet(name):\n    print(f"Hello, {name}!")\n`,
+  Java: `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}`,
+  Cpp: `#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}`
+}
 
 const loadCodeMirror = async () => {
   if (window.CodeMirror) return
@@ -81,7 +85,6 @@ const loadCodeMirror = async () => {
   ]);
 
   await Promise.all([
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js'),
     loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js'),
     loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js')
   ]);
@@ -95,12 +98,12 @@ const initializeCodeMirror = () => {
     }
     editorInstance = window.CodeMirror.fromTextArea(editorEl.value, {
       lineNumbers: true,
-      mode: selectedLanguage.value.toLowerCase(),
+      mode: getMode(selectedLanguage.value),
       theme: isDarkTheme.value ? 'dracula' : 'default',
       indentUnit: 4,
       tabSize: 4,
     })
-    editorInstance.setValue('function greet(name) {\n  console.log("Hello, " + name + "!");\n}')
+    editorInstance.setValue(codeExamples[selectedLanguage.value] || '')
   }
 
   if (resultEditorEl.value && window.CodeMirror) {
@@ -110,12 +113,24 @@ const initializeCodeMirror = () => {
     }
     resultEditorInstance = window.CodeMirror.fromTextArea(resultEditorEl.value, {
       lineNumbers: true,
-      mode: selectedLanguage.value.toLowerCase(),
+      mode: getMode(selectedLanguage.value),
       theme: isDarkTheme.value ? 'dracula' : 'default',
       readOnly: true,
       indentUnit: 4,
       tabSize: 4,
     })
+  }
+};
+
+const getMode = (language) => {
+  switch (language) {
+    case 'Python':
+      return 'python';
+    case 'Java':
+    case 'Cpp':
+      return 'text/x-c++src';
+    default:
+      return 'text/plain';
   }
 };
 
@@ -161,12 +176,13 @@ watch(isDarkTheme, () => {
   }
 });
 
-watch(selectedLanguage, () => {
+watch(selectedLanguage, (newLang) => {
   if (editorInstance) {
-    editorInstance.setOption('mode', selectedLanguage.value.toLowerCase());
+    editorInstance.setOption('mode', getMode(newLang));
+    editorInstance.setValue(codeExamples[newLang] || '');
   }
   if (resultEditorInstance) {
-    resultEditorInstance.setOption('mode', selectedLanguage.value.toLowerCase());
+    resultEditorInstance.setOption('mode', getMode(newLang));
   }
 });
 
@@ -370,6 +386,7 @@ const navigateToRegister = () => {
   font-size: 18px;
   font-weight: 500;
   color: #333;
+  width: 120px; /* Fixed width to prevent layout shift */
 }
 
 .input-field,
@@ -393,7 +410,7 @@ const navigateToRegister = () => {
 .switch {
   position: relative;
   display: inline-block;
-  width: 60px;
+  width: 80px;
   height: 34px;
 }
 
@@ -427,12 +444,31 @@ const navigateToRegister = () => {
   border-radius: 50%;
 }
 
+.slider:after {
+  position: absolute;
+  content: "☀️";
+  font-size: 20px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #000;
+  line-height: 34px; /* Ensure vertical centering */
+}
+
+.slider.dark-theme:after {
+  content: "🌙";
+  left: 10px;
+  right: auto;
+  color: #fff;
+  line-height: 34px; /* Ensure vertical centering */
+}
+
 input:checked + .slider {
   background-color: #4f46e5;
 }
 
 input:checked + .slider:before {
-  transform: translateX(26px);
+  transform: translateX(46px);
 }
 
 .generate-button {
@@ -568,6 +604,26 @@ input:checked + .slider:before {
 
   .generating-text {
     font-size: 24px;
+  }
+
+  .switch {
+    width: 60px;
+  }
+
+  .slider:after {
+    font-size: 16px;
+  }
+
+  .slider.dark-theme:after {
+    font-size: 16px;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(26px);
+  }
+
+  .label-text {
+    width: 100px; /* Adjusted for mobile */
   }
 }
 </style>
