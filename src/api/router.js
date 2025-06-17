@@ -10,14 +10,15 @@ import SolveSkipsPage from '../../SolveSkips.vue'
 import SolveNoises from '../../SolveNoises.vue'
 import { useAuthStore } from '../stores/auth'
 import AliasPage from "../../AliasPage.vue";
+import MyTasks from '../../MyTasks.vue'
 
 const routes = [
   { path: '/', component: HomePage },
   { path: '/login', component: LoginForm },
+  { path: '/my-tasks', component: MyTasks, meta: { requiresAuth: true } },
   { path: '/start', component: HomePage },
   { path: '/generate-skips', component: FillGapsGenerator, meta: { requiresAuth: true } }, 
   { path: '/generate-noises', component: NoisesGenerator, meta: { requiresAuth: true } }, 
-  { path: '/remove-noices', component: Test, meta: { requiresAuth: true } }, 
   { path: '/solve', component: Test, meta: { requiresAuth: true } },
   { path: '/solve-skips', component: SolveSkipsPage, meta: { requiresAuth: true } },
   { path: '/solve-noises', component: SolveNoises, meta: { requiresAuth: true } },

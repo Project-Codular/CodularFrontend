@@ -19,6 +19,10 @@
       <div v-if="authStore.userEmail" class="user-email-display">
         {{ authStore.userEmail }}
       </div>
+      <div class="dropdown-item my-tasks-item" @click="navigateToMyTasks">
+        My Tasks
+      </div>
+      <div class="dropdown-separator"></div>
       <div 
         class="dropdown-item logout-item" 
         @click="handleLogout" 
@@ -29,7 +33,8 @@
           <path d="M17 7L15.59 8.41L18.17 11H8V13H18.17L15.59 15.59L17 17L22 12L17 7ZM4 5H12V3H4C2.9 3 2 3.9 2 5V19C2 20.1 2.9 21 4 21H12V19H4V5Z"/>
         </svg>
         <span v-if="!isLoggingOut">Logout</span>
-        <span v-else>Logging out...</span> </div>
+        <span v-else>Logging out...</span> 
+      </div>
     </div>
   </div>
 </template>
@@ -37,10 +42,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAuthStore } from './src/stores/auth';
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
 const isDropdownOpen = ref(false);
-const isLoggingOut = ref(false); // <-- Новое состояние для отслеживания загрузки
+const isLoggingOut = ref(false);
+const router = useRouter();
 
 const userEmailInitials = computed(() => {
   if (authStore.userEmail) {
@@ -61,19 +68,19 @@ const handleClickOutside = (event) => {
 };
 
 const handleLogout = async () => {
-  isLoggingOut.value = true; // <-- Устанавливаем состояние загрузки в true немедленно
+  isLoggingOut.value = true;
   try {
     await authStore.logout();
-    // На самом деле, эта строка будет выполнена только если logout успешен на бэкенде
-    // и если не было полной перезагрузки страницы внутри authStore.logout()
-    // Для нашего случая с window.location.href = '/', она просто начнет перезагрузку
-    window.location.href = '/'; 
+    window.location.href = '/';
   } catch (error) {
     console.error('Logout failed:', error);
-    // В случае ошибки, можно отменить состояние загрузки или также перезагрузить
-    isLoggingOut.value = false; // Отменяем загрузку, если произошла ошибка
-    window.location.href = '/'; // В любом случае, перезагружаем страницу
+    isLoggingOut.value = false;
+    window.location.href = '/';
   }
+};
+
+const navigateToMyTasks = () => {
+  router.push('/my-tasks');
 };
 
 onMounted(() => {
@@ -139,15 +146,15 @@ onUnmounted(() => {
 .dropdown-menu {
   position: absolute;
   top: 70px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 280px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
   z-index: 100;
-  overflow: hidden;
   padding: 15px;
 }
 
@@ -155,7 +162,6 @@ onUnmounted(() => {
   padding: 15px 20px;
   cursor: pointer;
   font-size: 16px;
-  color: #333;
   transition: background-color 0.2s;
   white-space: nowrap;
   border-radius: 8px;
@@ -169,13 +175,12 @@ onUnmounted(() => {
   background-color: #f7f7f7;
 }
 
-/* Новый стиль для состояния загрузки кнопки Logout */
 .dropdown-item.logging-out {
-  cursor: not-allowed; /* Курсор "запрещено" */
-  opacity: 0.7; /* Сделаем кнопку немного прозрачной */
-  background-color: #f0f0f0; /* Более нейтральный фон */
-  color: #888; /* Более тусклый текст */
-  pointer-events: none; /* Полностью отключаем события мыши */
+  cursor: not-allowed;
+  opacity: 0.7;
+  background-color: #f0f0f0;
+  color: #888;
+  pointer-events: none;
 }
 
 .user-email-display {
@@ -192,6 +197,23 @@ onUnmounted(() => {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+  text-align: center;
+}
+
+.my-tasks-item {
+  color: #333;
+  padding: 15px 20px;
+  border-radius: 8px;
+}
+
+.my-tasks-item:hover {
+  background-color: #f7f7f7;
+}
+
+.dropdown-separator {
+  height: 1px;
+  background-color: #eee;
+  margin: 10px 0;
 }
 
 .logout-item {

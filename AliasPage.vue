@@ -57,6 +57,12 @@
                 ></textarea>
               </div>
             </div>
+            <div v-if="submissionResult.hints.length" class="hints">
+              <h4>Hints:</h4>
+              <ul>
+                <li v-for="(hint, index) in submissionResult.hints" :key="index">{{ hint }}</li>
+              </ul>
+            </div>
           </div>
 
           <!-- Noises task interface -->
