@@ -81,6 +81,7 @@ const handleLogout = async () => {
 
 const navigateToMyTasks = () => {
   router.push('/my-tasks');
+  isDropdownOpen.value = false; // Close dropdown after navigation
 };
 
 onMounted(() => {

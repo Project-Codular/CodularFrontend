@@ -8,7 +8,7 @@ import NoisesGenerator from '../views/NoisesGenerator.vue'
 import SolveSkipsPage from '../views/SolveSkips.vue'
 import SolveNoises from '../views/SolveNoises.vue'
 import { useAuthStore } from '../stores/auth'
-import AliasPage from "../views/AliasPage.vue";
+import AliasPage from "../views/AliasPage.vue"
 import MyTasks from '../views/MyTasks.vue'
 import AboutProject from '../views/AboutProject.vue'
 import Team from '../views/Team.vue'
@@ -30,6 +30,21 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior(to, from, savedPosition) {
+    // Scroll to top for route changes (not in-page anchors)
+    if (to.path !== from.path || !savedPosition) {
+      return { top: 0, behavior: 'smooth' }
+    }
+    // Preserve saved position if navigating back (e.g., browser back button)
+    if (savedPosition) {
+      return savedPosition
+    }
+    // Handle in-page navigation (e.g., #generate-tasks-block) if needed
+    if (to.hash) {
+      return { el: to.hash, behavior: 'smooth' }
+    }
+    return { top: 0, behavior: 'smooth' }
+  },
 })
 
 router.beforeEach((to, from, next) => {

@@ -38,7 +38,7 @@ const teamMembers = [
   { name: 'Daniil', surname: 'Smirnov', role: 'DevOps', github: 'https://github.com/xm1k' },
   { name: 'Alexander', surname: 'Fedoryako', role: 'Frontend Lead', github: 'https://github.com/i-am-a-saw' },
   { name: 'Nikita', surname: 'Andriyanov', role: 'Frontend Developer', github: 'https://github.com/Axeedev' },
-  { name: 'Artyom', surname: 'Linnik', role: 'Frontend Developer', github: 'https://github.com/' },
+  { name: 'Artyom', surname: 'Linnik', role: 'Frontend Developer', github: 'https://github.com/Artem4ic' },
   { name: 'Valentina', surname: 'Dashinimaeva', role: 'Backend&Manual Testing', github: 'https://github.com/immedeg' },
   { name: 'Natalia', surname: 'Khlopochkina', role: 'Testing and Project Reporting', github: 'https://github.com/Natasha3008' }
 ]
