@@ -3,7 +3,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './app.vue'
-import router from './api/router'
+import router from './router/router'
 import { useAuthStore } from './stores/auth'
 
 const app = createApp(App)

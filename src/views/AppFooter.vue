@@ -23,8 +23,8 @@
       <div class="footer-info">
         <span class="nav-title">Info</span>
         <div class="nav-links">
-          <a href="#" @click.prevent="navigateTo('/about')">About Us</a>
-          <a href="#" @click.prevent="navigateTo('/team')">Our Team</a>
+          <a href="#" @click.prevent="navigateTo('/about')">About Project</a>
+          <a href="#" @click.prevent="navigateTo('/our-team')">Our Team</a>
         </div>
       </div>
     </div>
@@ -125,7 +125,7 @@ const navigateTo = (path) => {
 
 .nav-links a:hover {
   font-size: calc(16px + 0.2px);
-  color: #ffffff; /* Ensure text remains white */
+  color: #ffffff;
 }
 
 @media (max-width: 768px) {

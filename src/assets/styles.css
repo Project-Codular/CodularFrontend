@@ -44,6 +44,19 @@ button {
   z-index: 5;
 }
 
+.flex-row-center {
+  position: relative;
+  width: 90%;
+  max-width: 1437px;
+  height: auto;
+  margin: 2rem auto 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  z-index: 5;
+}
+
 .log-in-start {
   display: flex;
   align-items: center;
