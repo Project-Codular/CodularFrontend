@@ -52,8 +52,8 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from './src/stores/auth'
-import { useTaskStore } from './src/stores/task'
+import { useAuthStore } from '../stores/auth'
+import { useTaskStore } from '../stores/task'
 
 const router = useRouter()
 const route = useRoute()

@@ -1,12 +1,13 @@
 <template>
-  <div class="solve-noises-page-wrapper">
+  <div class="solve-skips-page-wrapper">
     <div v-if="loading" class="loading-message">Looking for tasks...</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
     <div v-else class="content-container">
-      <h2 class="section-header">Available Noises Tasks</h2>
+      <h2 class="section-header">My Tasks</h2>
       <div class="tasks-list">
         <div v-for="(task, index) in tasks" :key="task.alias" class="task-item" @click="navigateToTask(task.alias)">
           <span class="task-index">{{ index + 1 }}</span>
+          <span class="task-type">{{ task.type }}</span>
           <span class="task-language">{{ task.programming_language }}</span>
           <span class="task-description">{{ task.description }}</span>
         </div>
@@ -25,7 +26,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import api from './src/api/axios'
+import api from '../api/axios'
 
 const router = useRouter()
 const tasks = ref([])
@@ -40,9 +41,8 @@ const loadingRandom = ref(false)
 const loadTasks = async () => {
   loading.value = true
   try {
-    const response = await api.get('/tasks', {
+    const response = await api.get('/user/tasks', {
       params: {
-        type: 'noises',
         offset: offset.value,
         limit: limit.value
       }
@@ -61,6 +61,9 @@ const loadTasks = async () => {
       switch (err.response.status) {
         case 400:
           error.value = 'Invalid query parameters'
+          break
+        case 401:
+          error.value = 'Unauthorized'
           break
         case 500:
           error.value = 'Internal server error'
@@ -88,7 +91,7 @@ const getRandomTask = async () => {
   loadingRandom.value = true
   try {
     const response = await api.get('/task/random', {
-      params: { type: 'noises' }
+      params: { type: tasks.value.length ? tasks.value[0].type : 'skips' } // Default to 'skips' if no tasks
     })
     const alias = response.data.taskAlias
     if (alias) {
@@ -104,7 +107,7 @@ const getRandomTask = async () => {
           error.value = 'Invalid task type'
           break
         case 404:
-          error.value = 'No public tasks found for noises'
+          error.value = 'No public tasks found'
           break
         case 500:
           error.value = 'Internal server error'
@@ -128,7 +131,7 @@ onMounted(loadTasks)
 </script>
 
 <style scoped>
-.solve-noises-page-wrapper {
+.solve-skips-page-wrapper {
   width: 90%;
   max-width: 1437px;
   margin: clamp(1rem, 2.5vw, 2.5rem) auto;
@@ -199,7 +202,7 @@ onMounted(loadTasks)
   background-color: #f0f0f0;
 }
 
-.task-index, .task-language, .task-description {
+.task-index, .task-type, .task-language, .task-description {
   font-family: Friska, var(--default-font-family);
   font-size: clamp(0.9rem, 1.5vw, 1.125rem);
   color: #333;
@@ -208,6 +211,11 @@ onMounted(loadTasks)
 .task-index {
   font-weight: 600;
   width: clamp(1.25rem, 3vw, 3.125rem);
+}
+
+.task-type {
+  width: clamp(3rem, 6vw, 6.25rem);
+  text-align: center;
 }
 
 .task-language {
@@ -282,6 +290,11 @@ onMounted(loadTasks)
     margin-bottom: 0.5rem;
   }
 
+  .task-type {
+    margin-bottom: 0.5rem;
+    width: auto;
+  }
+
   .task-language {
     margin-bottom: 0.5rem;
     width: auto;
@@ -308,6 +321,7 @@ onMounted(loadTasks)
   }
 
   .task-index,
+  .task-type,
   .task-language,
   .task-description {
     font-size: clamp(0.8rem, 1.5vw, 1rem);

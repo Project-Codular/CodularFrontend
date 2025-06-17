@@ -22,7 +22,7 @@
 
 <script setup>
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from './src/stores/auth' // Импорт Pinia store
+import { useAuthStore } from '../stores/auth' // Импорт Pinia store
 import UserProfile from './UserProfile.vue' // Импорт нового компонента профиля
 import { nextTick } from 'vue' // Импорт nextTick из vue
 

@@ -120,7 +120,7 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import api from './src/api/axios'
+import api from '../api/axios'
 
 const route = useRoute()
 const taskData = ref({})

@@ -1,16 +1,16 @@
 // src/api/router.js
 
 import { createRouter, createWebHistory } from 'vue-router'
-import HomePage from '../../HomePage.vue'
+import HomePage from '../views/HomePage.vue'
 import Test from '../../test.vue'
-import LoginForm from '../../LoginForm.vue'
-import FillGapsGenerator from '../../GapsGenerator.vue'
-import NoisesGenerator from '../../NoisesGenerator.vue'
-import SolveSkipsPage from '../../SolveSkips.vue'
-import SolveNoises from '../../SolveNoises.vue'
+import LoginForm from '../views/LoginForm.vue'
+import FillGapsGenerator from '../views/GapsGenerator.vue'
+import NoisesGenerator from '../views/NoisesGenerator.vue'
+import SolveSkipsPage from '../views/SolveSkips.vue'
+import SolveNoises from '../views/SolveNoises.vue'
 import { useAuthStore } from '../stores/auth'
-import AliasPage from "../../AliasPage.vue";
-import MyTasks from '../../MyTasks.vue'
+import AliasPage from "../views/AliasPage.vue";
+import MyTasks from '../views/MyTasks.vue'
 
 const routes = [
   { path: '/', component: HomePage },
