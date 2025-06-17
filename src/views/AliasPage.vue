@@ -21,7 +21,7 @@
       </div>
       <h2 class="task-description">{{ taskData.description }}</h2>
 
-      <div v-if="taskType" class="task-type-label">{{ taskType === 'skips' ? 'Fill in the gaps task' : 'Remove noises task' }}</div>
+      <div v-if="taskType" class="task-type-label">{{ taskType === 'skips' ? 'Fill in the gaps (___) task' : 'Remove noises task' }}</div>
 
       <div class="code-and-inputs-container">
         <div class="code-section">
@@ -63,6 +63,9 @@
                 <li v-for="(hint, index) in submissionResult.hints" :key="index">{{ hint }}</li>
               </ul>
             </div>
+            <div v-if="submissionResult.message" class="result-message">
+              {{ submissionResult.message }}
+            </div>
           </div>
 
           <!-- Noises task interface -->
@@ -77,6 +80,9 @@
                 <ul>
                   <li v-for="(hint, index) in submissionResult.hints" :key="index">{{ hint }}</li>
                 </ul>
+              </div>
+              <div v-if="submissionResult.message" class="result-message">
+                {{ submissionResult.message }}
               </div>
             </div>
           </div>
@@ -131,7 +137,7 @@ const codeMirrorContainer = ref(null)
 const codeMirrorTextarea = ref(null)
 const isSubmitting = ref(false)
 const submissionError = ref(null)
-const submissionResult = ref({ score: -1, hints: [] })
+const submissionResult = ref({ score: -1, hints: [], message: '' })
 const isDarkTheme = ref(false)
 const isPublic = ref(false)
 const showModal = ref(false)
@@ -144,6 +150,12 @@ const inputCount = computed(() => {
     return (taskData.value.codeToSolve.match(/\uD83D\uDD11/g) || []).length
   }
   return 0
+})
+const modifiedCode = computed(() => {
+  if (taskData.value && taskData.value.codeToSolve && taskType.value === 'skips') {
+    return taskData.value.codeToSolve.replace(/\uD83D\uDD11/g, '___')
+  }
+  return taskData.value.codeToSolve || ''
 })
 
 const getMode = (language) => {
@@ -197,7 +209,7 @@ const fetchTask = async (alias) => {
   console.log('fetchTask: Starting for alias:', alias)
   loading.value = true
   submissionError.value = null
-  submissionResult.value = { score: -1, hints: [] }
+  submissionResult.value = { score: -1, hints: [], message: '' }
   if (editorInstance) {
     console.log('fetchTask: Destroying existing CodeMirror instance.')
     editorInstance.toTextArea()
@@ -228,11 +240,11 @@ const fetchTask = async (alias) => {
 const initializeCodeMirror = async () => {
   console.log('initializeCodeMirror: Attempting initialization.')
   console.log('initializeCodeMirror: codeMirrorTextarea.value:', codeMirrorTextarea.value)
-  console.log('initializeCodeMirror: taskData.value?.codeToSolve:', taskData.value?.codeToSolve)
+  console.log('initializeCodeMirror: modifiedCode.value:', modifiedCode.value)
 
   await loadCodeMirror()
 
-  if (codeMirrorTextarea.value && taskData.value && taskData.value.codeToSolve && window.CodeMirror) {
+  if (codeMirrorTextarea.value && taskData.value && modifiedCode.value && window.CodeMirror) {
     if (editorInstance) {
       console.log('initializeCodeMirror: Destroying old editor.')
       editorInstance.toTextArea()
@@ -248,7 +260,7 @@ const initializeCodeMirror = async () => {
       tabSize: 4,
       lineWrapping: true
     })
-    editorInstance.setValue(taskData.value.codeToSolve)
+    editorInstance.setValue(modifiedCode.value)
     console.log('initializeCodeMirror: CodeMirror initialized successfully!')
   } else {
     console.log('initializeCodeMirror: Conditions not met for initialization.')
@@ -259,7 +271,7 @@ const submitAnswers = async () => {
   console.log('submitAnswers: Starting submission.')
   isSubmitting.value = true
   submissionError.value = null
-  submissionResult.value = { score: -1, hints: [] }
+  submissionResult.value = { score: -1, hints: [], message: '' }
 
   const taskAlias = route.params.id
   let endpoint, payload
@@ -306,22 +318,12 @@ const submitAnswers = async () => {
             submissionError.value = 'Submission check timed out'
             isSubmitting.value = false
           }
-        } else if (statusData.isCorrect === 'Failed') {
-          clearInterval(checkInterval)
-          if (statusData.responseInfo?.error) {
-            submissionError.value = statusData.responseInfo.error
-          } else {
-            submissionResult.value = {
-              score: statusData.score,
-              hints: statusData.hints || []
-            }
-          }
-          isSubmitting.value = false
         } else {
           clearInterval(checkInterval)
           submissionResult.value = {
             score: statusData.score,
-            hints: statusData.hints || []
+            hints: statusData.hints || [],
+            message: statusData.score === 100 ? 'Task solved correctly! Score: 100' : `Task not solved correctly. Score: ${statusData.score}`
           }
           isSubmitting.value = false
         }
@@ -625,6 +627,10 @@ input:checked + .slider:before {
   margin-bottom: 10px;
   font-weight: normal;
 }
+.task-type-label span.underline-placeholder {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
+}
 
 .task-description {
   font-size: 2em;
@@ -668,6 +674,10 @@ input:checked + .slider:before {
   height: 400px;
   border-radius: 8px;
   font-family: 'Roboto Mono', monospace;
+}
+.codemirror-wrapper :deep(.CodeMirror span.cm-___) {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
 }
 
 .CodeMirror-scroll {
@@ -794,6 +804,13 @@ input:checked + .slider:before {
   margin-bottom: 5px;
 }
 
+.result-message {
+  margin-top: 10px;
+  font-size: 1.1em;
+  color: var(--primary-purple);
+  text-align: center;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -899,4 +916,4 @@ input:checked + .slider:before {
     width: 90%;
   }
 }
-</style> 
+</style>
