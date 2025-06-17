@@ -70,10 +70,13 @@
 
           <!-- Noises task interface -->
           <div v-else-if="taskType === 'noises'">
-            <div v-if="submissionResult.score === -1 && submissionResult.hints.length === 0" class="no-submissions-message">
+            <div v-if="!isSubmitting && submissionResult.score === -1 && submissionResult.hints.length === 0" class="no-submissions-message">
               No submissions yet. Make your first one!
             </div>
-            <div v-else class="submission-result">
+            <div v-if="isSubmitting" class="checking-message">
+              Checking your answer, give us some time...
+            </div>
+            <div v-else-if="submissionResult.score !== -1 || submissionResult.hints.length > 0" class="submission-result">
               <p class="score">Score: {{ submissionResult.score }}</p>
               <div v-if="submissionResult.hints.length" class="hints">
                 <h4>Hints:</h4>
@@ -323,7 +326,7 @@ const submitAnswers = async () => {
           submissionResult.value = {
             score: statusData.score,
             hints: statusData.hints || [],
-            message: statusData.score === 100 ? 'Task solved correctly! Score: 100' : `Task not solved correctly. Score: ${statusData.score}`
+            message: statusData.score === 100 ? 'Task solved correctly!' : `Task not solved correctly. Fix errors and try again.`
           }
           isSubmitting.value = false
         }
@@ -774,6 +777,13 @@ input:checked + .slider:before {
 .submission-result {
   margin-top: 20px;
   text-align: center;
+}
+
+.checking-message {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  color: var(--text-gray);
 }
 
 .score {

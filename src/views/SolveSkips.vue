@@ -1,6 +1,7 @@
 <template>
   <div class="solve-skips-page-wrapper">
     <div v-if="loading" class="loading-message">Looking for tasks...</div>
+    <div v-else-if="noTasks" class="no-tasks-message">No tasks available yet. Create a task and be the first to publish!</div>
     <div v-else-if="error" class="error-message">{{ error }}</div>
     <div v-else class="content-container">
       <h2 class="section-header">Available Skips Tasks</h2>
@@ -36,6 +37,7 @@ const limit = ref(10)
 const hasMore = ref(true)
 const loadingMore = ref(false)
 const loadingRandom = ref(false)
+const noTasks = ref(false)
 
 const loadTasks = async () => {
   loading.value = true
@@ -49,9 +51,11 @@ const loadTasks = async () => {
     })
     const data = response.data
     if (data.responseInfo.status === 'OK') {
-      tasks.value = offset.value === 0 ? data.tasks : [...tasks.value, ...data.tasks]
-      hasMore.value = data.tasks.length === limit.value
-      offset.value += data.tasks.length
+      const fetchedTasks = data.tasks || []
+      tasks.value = offset.value === 0 ? fetchedTasks : [...tasks.value, ...fetchedTasks]
+      hasMore.value = fetchedTasks.length === limit.value
+      offset.value += fetchedTasks.length
+      noTasks.value = offset.value === 0 && fetchedTasks.length === 0
     } else {
       throw new Error('Invalid response status')
     }
@@ -160,6 +164,13 @@ onMounted(loadTasks)
   text-align: center;
   font-size: clamp(1rem, 1.5vw, 1.2em);
   color: #e54646;
+  margin-top: clamp(0.625rem, 1.25vw, 1.25rem);
+}
+
+.no-tasks-message {
+  text-align: center;
+  font-size: clamp(1rem, 1.5vw, 1.2em);
+  color: #6f6a6a;
   margin-top: clamp(0.625rem, 1.25vw, 1.25rem);
 }
 
