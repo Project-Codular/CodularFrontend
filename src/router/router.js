@@ -12,6 +12,7 @@ import AliasPage from "../views/AliasPage.vue"
 import MyTasks from '../views/MyTasks.vue'
 import AboutProject from '../views/AboutProject.vue'
 import Team from '../views/Team.vue'
+import NotFound from '../views/NotFound.vue'
 
 const routes = [
   { path: '/', component: HomePage },
@@ -25,21 +26,19 @@ const routes = [
   { path: '/solve-skips', component: SolveSkipsPage, meta: { requiresAuth: true } },
   { path: '/solve-noises', component: SolveNoises, meta: { requiresAuth: true } },
   { path: '/task/:id', component: AliasPage, meta: { requiresAuth: true } },
+  { path: '/:catchAll(.*)', component: NotFound } // Catch-all route for 404
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    // Scroll to top for route changes (not in-page anchors)
     if (to.path !== from.path || !savedPosition) {
       return { top: 0, behavior: 'smooth' }
     }
-    // Preserve saved position if navigating back (e.g., browser back button)
     if (savedPosition) {
       return savedPosition
     }
-    // Handle in-page navigation (e.g., #generate-tasks-block) if needed
     if (to.hash) {
       return { el: to.hash, behavior: 'smooth' }
     }
@@ -47,15 +46,18 @@ const router = createRouter({
   },
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
+  // Check if the route is authenticated and user is not authenticated
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   }
+  // Redirect authenticated users away from login
   else if (to.path === '/login' && authStore.isAuthenticated) {
     next('/')
   }
+  // Proceed with navigation
   else {
     next()
   }

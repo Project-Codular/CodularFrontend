@@ -119,10 +119,11 @@
 
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import api from '../api/axios'
 
 const route = useRoute()
+const router = useRouter()
 const taskData = ref({})
 const loading = ref(true)
 const userAnswers = ref([])
@@ -212,8 +213,12 @@ const fetchTask = async (alias) => {
       userAnswers.value = Array(inputCount.value).fill('')
     }
   } catch (err) {
-    taskData.value = { error: err.message }
     console.error('fetchTask: Error fetching task:', err)
+    if (err.response && err.response.status === 404) {
+      router.push('/NotFound') // Redirect to 404 page on 404 from server
+    } else {
+      taskData.value = { error: err.message } // Fallback for other errors
+    }
   } finally {
     loading.value = false
     console.log('fetchTask: Loading finished.')
@@ -894,4 +899,4 @@ input:checked + .slider:before {
     width: 90%;
   }
 }
-</style>
+</style> 

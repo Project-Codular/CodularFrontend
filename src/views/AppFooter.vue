@@ -13,9 +13,9 @@
       <div class="footer-nav">
         <span class="nav-title">Explore Codular</span>
         <div class="nav-links">
-          <a href="#" @click.prevent="navigateTo('/generate-skips')">Generate skips</a>
-          <a href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
-          <a href="#" @click.prevent="navigateTo('/#solve-tasks-block')">Solve problems</a>
+          <a role="button" @click.prevent="navigateTo('/generate-skips')">Generate skips</a>
+          <a role="button" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
+          <a role="button" @click.prevent="navigateTo('/#solve-tasks-block')">Solve problems</a>
         </div>
       </div>
 
@@ -23,8 +23,8 @@
       <div class="footer-info">
         <span class="nav-title">Info</span>
         <div class="nav-links">
-          <a href="#" @click.prevent="navigateTo('/about')">About Project</a>
-          <a href="#" @click.prevent="navigateTo('/our-team')">Our Team</a>
+          <a role="button" @click.prevent="navigateTo('/about')">About Project</a>
+          <a role="button" @click.prevent="navigateTo('/our-team')">Our Team</a>
         </div>
       </div>
     </div>
@@ -120,6 +120,7 @@ const navigateTo = (path) => {
   font-weight: 400;
   color: #ffffff;
   text-decoration: none;
+  cursor: pointer; /* Ensure clickable cursor */
   transition: font-size 0.2s ease;
 }
 

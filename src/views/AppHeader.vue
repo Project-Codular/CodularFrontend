@@ -3,14 +3,14 @@
     <div class="flex-row">
       <span class="code-genius" @click="navigateTo('/')">Codular</span>
       <div class="menu">
-        <a class="contribute-problem" href="#" @click.prevent="navigateTo('/generate-skips')">Generate skips</a>
-        <a class="solve-problems" href="#" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
-        <a class="solve-problems" href="#solve-tasks-block" @click.prevent="navigateTo('/#solve-tasks-block')">Solve problems</a>
+        <a class="contribute-problem" role="button" @click.prevent="navigateTo('/generate-skips')">Generate skips</a>
+        <a class="solve-problems" role="button" @click.prevent="navigateTo('/generate-noises')">Generate noises</a>
+        <a class="solve-problems" role="button" @click.prevent="navigateTo('/#solve-tasks-block')">Solve problems</a>
       </div>
       <div class="log-in-start">
         <template v-if="!authStore.isAuthenticated">
-          <a class="log-in" href="#" @click.prevent="navigateToLogin()">Log in</a>
-          <a class="get-started" href="#" @click.prevent="navigateToRegister()">Register</a>
+          <a class="log-in" role="button" @click.prevent="navigateToLogin()">Log in</a>
+          <a class="get-started" role="button" @click.prevent="navigateToRegister()">Register</a>
         </template>
         <template v-else>
           <UserProfile />
@@ -125,6 +125,7 @@ const navigateToRegister = () => {
   text-decoration: none;
   white-space: nowrap;
   transition: color 0.2s ease;
+  cursor: pointer; /* Ensure clickable cursor */
 }
 
 .contribute-problem:hover,
@@ -151,7 +152,7 @@ const navigateToRegister = () => {
   white-space: nowrap;
   letter-spacing: 0.0825rem;
   text-decoration: none;
-  z-index: 6;
+  cursor: pointer; /* Ensure clickable cursor */
 }
 
 .get-started {
@@ -170,7 +171,7 @@ const navigateToRegister = () => {
   font-weight: 500;
   text-align: center;
   text-decoration: none;
-  cursor: pointer;
+  cursor: pointer; /* Ensure clickable cursor */
   transition: background-color 0.3s ease;
 }
 
